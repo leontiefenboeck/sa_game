@@ -1,0 +1,32 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #282c34;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    border: 2px solid #fff;
+    background-color: #1e1e1e;
+}
+
+button {
+    margin: 5px;
+    padding: 10px 20px;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #666;
+}
+
+h1 {
+    margin: 10px;
+}
