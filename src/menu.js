@@ -12,4 +12,3 @@ function startLevel(levelNumber) {
       startLevel2(canvas, ctx);
     }
   }
-  
