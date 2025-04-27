@@ -12,6 +12,7 @@ body {
 canvas {
     border: 2px solid #fff;
     background-color: #1e1e1e;
+    margin-top: 20px;
 }
 
 button {
@@ -28,5 +29,5 @@ button:hover {
 }
 
 h1 {
-    margin: 10px;
+    margin-top: -200px;
 }

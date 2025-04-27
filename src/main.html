@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My JS Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>My Browser Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <script type ="module" src="script.js"></script>
-    
+  <div id="main-menu", align="center">
+    <h1>The Binding of glass mini golf 2</h1>
+    <h3>Choose a Level</h3>
+    <button onclick="startLevel(1)">Level 1</button> 
+    <br>
+    <button onclick="startLevel(2)">Level 2</button>
+  </div>
+
+  <canvas id="gameCanvas" width="800" height="600" style="display:none;"></canvas>
+
+  <script src="menu.js"></script>
+  <script src="core.js"></script>
+  <script src="levels/level1.js"></script>
+  <script src="levels/level2.js"></script>
+  <script src="techs/PathInterpol.js"></script>
+  <script src="techs/RigidBody.js"></script>
+
 </body>
 </html>

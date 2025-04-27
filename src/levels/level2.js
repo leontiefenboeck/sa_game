@@ -1,5 +1,5 @@
-import * as particleScript from './ParticleDynamics.js'
-import { Vector2 } from './Vector.js';
+import * as particleScript from '../techs/ParticleDynamics.js'
+import { Vector2 } from '../Vector.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
