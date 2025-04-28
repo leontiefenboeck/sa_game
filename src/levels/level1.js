@@ -1,27 +1,27 @@
-function startLevel1(canvas, ctx) {
-    const goals = [
-      { x: 200, y: 200, radius: 30 }, 
-      { x: 600, y: 400, radius: 30 }  
-    ];
-    setGoalCircles(goals);
-    
-    const circlePoints = defineCircle(400, 300, 150, 20);
-    const backAndForthPoints = [
-        { x: 100, y: 300 },
-        { x: 100, y: 300 },
-        { x: 700, y: 300 },
-        { x: 700, y: 300 }
-    ];
+console.log('loading Level 1');
 
-    initSpline([
-        { points: circlePoints, t: 0, loop: true }, 
-        { points: backAndForthPoints, t: 0, speed: 0.01, loop: false }, 
-    ]);
+const canvas = document.getElementById('gameCanvas');
+const game = new Game(canvas);
 
-    const oldGameLoop = gameLoop;
-    gameLoop = function(ctx) {
-        oldGameLoop(ctx);
-        updateSplineObjects();
-        drawSplineObjects(ctx);
-    };
-}
+const holes = [ 
+    { x: 400, y: 100, radius: 30 }  
+];
+game.setHoles(holes);
+game.start();
+
+// const backAndForthPoints = [
+//     { x: 100, y: 300 },
+//     { x: 100, y: 300 },
+//     { x: 700, y: 300 },
+//     { x: 700, y: 300 }
+// ];
+
+// const spline = new Spline(backAndForthPoints, 0, 0.005);
+
+// const oldGameLoop = gameLoop;
+// gameLoop = function(ctx) {
+//     oldGameLoop(ctx);
+//     spline.update();
+//     spline.draw(ctx);    
+// };
+

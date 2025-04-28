@@ -1,88 +1,85 @@
-let splineObjects = [];
+class Spline {
+  constructor(points, t = 0, speed = 0.005) {
+    this.points = points; 
+    this.t = t;          
+    this.speed = speed;  
+    this.arcLengthTable = this.computeArcLengthTable(100);
+  }
 
-function initSpline(objects) {
-  splineObjects = objects.map(obj => ({
-    points: obj.points, // Spline points for this object
-    t: obj.t || 0,      // Initial t value
-    loop: obj.loop || false, // Whether the object loops or moves back and forth
-    speed: obj.speed || 0.005, // Speed of the object
-  }));
-}
+  update() {
+    const totalLength = this.arcLengthTable[this.arcLengthTable.length - 1].length;
+    const currentArcLength = (this.t * totalLength + this.speed * totalLength) % totalLength;
+    this.t = this.getTFromArcLength(currentArcLength);
+  }
 
-function updateSplineObjects() {
-  splineObjects.forEach(obj => {
-    if (obj.loop) {
-      obj.t += obj.speed;
-      if (obj.t > 1) obj.t = 0; // Loop back to the start
-    } else {
-      obj.t += obj.speed;
-      if (obj.t > 1) {
-        obj.t = 1;
-        obj.speed = -Math.abs(obj.speed); // Reverse direction
-      } else if (obj.t < 0) {
-        obj.t = 0;
-        obj.speed = Math.abs(obj.speed); // Reverse direction
-      }
-    }
-  });
-}
-
-function drawSplineObjects(ctx) {
-  ctx.fillStyle = 'red';
-  splineObjects.forEach(obj => {
-    const pos = interpolateSpline(obj.t, obj.points);
+  draw(ctx) {
+    ctx.fillStyle = 'red';
+    const pos = this.interpolate(this.t, this.points);
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, 10, 0, Math.PI * 2);
     ctx.fill();
     ctx.closePath();
-  });
-}
-
-function interpolateSpline(t, points) {
-  // Determine which segment of the spline we're in
-  const segmentCount = points.length - 3; // Number of segments
-  const segment = Math.min(Math.floor(t * segmentCount), segmentCount - 1); // Current segment index
-  const localT = (t * segmentCount) - segment; // Local t within the segment
-
-  // Get the four control points for this segment
-  const p0 = points[segment];
-  const p1 = points[segment + 1];
-  const p2 = points[segment + 2];
-  const p3 = points[segment + 3];
-
-  const tt = localT * localT;
-  const ttt = tt * localT;
-
-  const q0 = -ttt + 2 * tt - localT;
-  const q1 = 3 * ttt - 5 * tt + 2;
-  const q2 = -3 * ttt + 4 * tt + localT;
-  const q3 = ttt - tt;
-
-  const x = 0.5 * (p0.x * q0 + p1.x * q1 + p2.x * q2 + p3.x * q3);
-  const y = 0.5 * (p0.y * q0 + p1.y * q1 + p2.y * q2 + p3.y * q3);
-
-  return { x, y };
-}
-
-function defineCircle(centerX, centerY, radius, segments) {
-  const points = [];
-  for (let i = 0; i < segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    points.push({
-      x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle),
-    });
   }
-  // Add extra points for smooth looping
-  points.push(points[0]); // Repeat the first point at the end
-  points.unshift(points[points.length - 2]); // Add the second-to-last point at the start
-  points.push(points[1]); // Add the second point at the end
 
-  return points;
+  interpolate(t, points) { 
+    const segmentCount = points.length - 3;
+    const segment = Math.min(Math.floor(t * segmentCount), segmentCount - 1);
+    const localT = (t * segmentCount) - segment;
+
+    const p0 = points[segment];
+    const p1 = points[segment + 1];
+    const p2 = points[segment + 2];
+    const p3 = points[segment + 3];
+
+    const tt = localT * localT;
+    const ttt = tt * localT;
+
+    const q0 = -ttt + 2 * tt - localT;
+    const q1 = 3 * ttt - 5 * tt + 2;
+    const q2 = -3 * ttt + 4 * tt + localT;
+    const q3 = ttt - tt;
+
+    const x = 0.5 * (p0.x * q0 + p1.x * q1 + p2.x * q2 + p3.x * q3);
+    const y = 0.5 * (p0.y * q0 + p1.y * q1 + p2.y * q2 + p3.y * q3);
+
+    return { x, y };
+  }
+
+  computeArcLengthTable(segments) {
+    const table = [];
+    let totalLength = 0;
+  
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments; // Divide t into equal segments
+      const pos = this.interpolate(t, this.points); // Get position on the curve
+  
+      if (i > 0) {
+        const prevPos = this.interpolate((i - 1) / segments, this.points); // Previous position
+        const segmentLength = Math.sqrt(
+          Math.pow(pos.x - prevPos.x, 2) + Math.pow(pos.y - prevPos.y, 2) // Euclidean distance
+        );
+        totalLength += segmentLength; // Accumulate arc length
+      }
+  
+      table.push({ t, length: totalLength }); 
+    }
+    return table; 
+  }
+
+  getTFromArcLength(arcLength) {
+    const table = this.arcLengthTable;
+
+    for (let i = 1; i < table.length; i++) {
+      if (arcLength <= table[i].length) {
+        const prev = table[i - 1];
+        const next = table[i];
+
+        const ratio = (arcLength - prev.length) / (next.length - prev.length);
+        return prev.t + ratio * (next.t - prev.t);
+      }
+    }
+
+    return 1; 
+  }
+
 }
-
-// Expose public functions
-window.initSpline = initSpline;
-window.updateSplineObjects = updateSplineObjects;
-window.drawSplineObjects = drawSplineObjects;
-window.defineCircle = defineCircle;
