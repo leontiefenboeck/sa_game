@@ -1,11 +1,12 @@
 class Game {
-    constructor(canvas) {
+    constructor(animationRate, canvas) {
+        this.animationRate = animationRate;
+
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.isGameRunning = true;
-        this.isDragging = false;
-        this.dragStart = { x: 0, y: 0 };
+
         this.goalCircles = [];
+
         this.ball = {
             x: canvas.width / 2,
             y: canvas.height - 20,
@@ -13,38 +14,61 @@ class Game {
             vx: 0,
             vy: 0
         };
+        this.isDragging = false;
+        this.dragStart = { x: 0, y: 0 };
 
-        this.addedAnimations = [];
+        this.addedUpdates = [];
+        this.addedRenders = [];
+
         this.initEventListeners();
+
+        this.lastFrameTime = 0; 
+        this.fps = 0; 
+
         console.log('Game initialized');
     }
 
-    gameLoop() {
-        if (!this.isGameRunning) return;
+    loop(timestamp) 
+    {
+        let delta = 0;
 
+        if (this.lastFrameTime) {
+            delta = timestamp - this.lastFrameTime;
+            if (!this.fpsUpdateTime || timestamp - this.fpsUpdateTime >= 500) {
+                this.fps = Math.round(1000 / delta);
+                this.fpsUpdateTime = timestamp;
+            }
+        }
+        this.lastFrameTime = timestamp;
+
+        this.update(delta);
+        this.render();
+
+        setTimeout(() => {
+            requestAnimationFrame((timestamp) => this.loop(timestamp));
+        }, 1000 / this.animationRate);
+    }
+
+    update(delta) {
+        this.updateBall(delta);
+        this.addedUpdates.forEach(update => update(delta));
+    }
+
+    render() {  
         const { ctx, canvas } = this;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         this.drawGoalCircles();
-        this.animateBall();
-        this.addedAnimations.forEach(animation => animation(ctx));
+        this.drawBall();
+        this.addedRenders.forEach(render => render(ctx));
 
-        requestAnimationFrame(() => this.gameLoop());
+        this.displayFPS();
     }
 
-    start() {
-        this.isGameRunning = true;
-        this.gameLoop();
-    }
+    addUpdate(update) { this.addedUpdates.push(update); }
+    addRender(render) { this.addedRenders.push(render); }
 
-    stop() {
-        this.isGameRunning = false;
-    }
-
-    addAnimation(func) {
-        this.addedAnimations.push(func);
-    }
-
+    // TODO: cant drag out of canvas
     initEventListeners() {
         this.canvas.addEventListener('mousedown', (e) => {
             this.isDragging = true;
@@ -54,16 +78,16 @@ class Game {
         this.canvas.addEventListener('mouseup', (e) => {
             if (this.isDragging) {
                 const dragEnd = { x: e.offsetX, y: e.offsetY };
-                this.ball.vx = (this.dragStart.x - dragEnd.x) * 0.1;
-                this.ball.vy = (this.dragStart.y - dragEnd.y) * 0.1;
+
+                this.ball.vx = (this.dragStart.x - dragEnd.x) * 5;
+                this.ball.vy = (this.dragStart.y - dragEnd.y )* 5;
+
                 this.isDragging = false;
             }
         });
     }
 
-    setHoles(goals) {
-        this.goalCircles = goals;
-    }
+    setHoles(goals) { this.goalCircles = goals; }
 
     checkGoalCollision() {
         for (const goal of this.goalCircles) {
@@ -72,27 +96,23 @@ class Game {
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < this.ball.radius + goal.radius) {
-                this.isGameRunning = false;
                 this.displayLevelCompleteMessage();
-                return true;
             }
         }
         return false;
     }
 
-    animateBall() { 
-        this.updateBall();
-        this.drawBall();
-    }
-
-    updateBall() {
+    updateBall(delta) {
         const { ball, canvas } = this;
-
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-        ball.vx *= 0.98; 
-        ball.vy *= 0.98;
-
+    
+        const deltaSeconds = delta / 1000;
+        ball.x += ball.vx * deltaSeconds;
+        ball.y += ball.vy * deltaSeconds;
+    
+        const friction = 0.98;
+        ball.vx *= friction;
+        ball.vy *= friction;
+    
         if (ball.x - ball.radius < 0) {
             ball.x = ball.radius;
             ball.vx *= -1;
@@ -109,7 +129,7 @@ class Game {
             ball.y = canvas.height - ball.radius;
             ball.vy *= -1;
         }
-
+    
         this.checkGoalCollision();
     }
 
@@ -142,5 +162,12 @@ class Game {
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(`Level Completed!`, canvas.width / 2, canvas.height / 2);
+    }
+
+    displayFPS() {
+        const { ctx } = this;
+        ctx.fillStyle = 'black';
+        ctx.font = '16px Arial';
+        ctx.fillText(`FPS: ${this.fps}`, 10, 20);
     }
 }
