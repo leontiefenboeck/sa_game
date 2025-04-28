@@ -14,8 +14,35 @@ class Game {
             vy: 0
         };
 
+        this.addedAnimations = [];
         this.initEventListeners();
         console.log('Game initialized');
+    }
+
+    gameLoop() {
+        if (!this.isGameRunning) return;
+
+        const { ctx, canvas } = this;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        this.drawGoalCircles();
+        this.animateBall();
+        this.addedAnimations.forEach(animation => animation(ctx));
+
+        requestAnimationFrame(() => this.gameLoop());
+    }
+
+    start() {
+        this.isGameRunning = true;
+        this.gameLoop();
+    }
+
+    stop() {
+        this.isGameRunning = false;
+    }
+
+    addAnimation(func) {
+        this.addedAnimations.push(func);
     }
 
     initEventListeners() {
@@ -51,6 +78,11 @@ class Game {
             }
         }
         return false;
+    }
+
+    animateBall() { 
+        this.updateBall();
+        this.drawBall();
     }
 
     updateBall() {
@@ -110,27 +142,5 @@ class Game {
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(`Level Completed!`, canvas.width / 2, canvas.height / 2);
-    }
-
-    gameLoop() {
-        if (!this.isGameRunning) return;
-
-        const { ctx, canvas } = this;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        this.drawGoalCircles();
-        this.updateBall();
-        this.drawBall();
-
-        requestAnimationFrame(() => this.gameLoop());
-    }
-
-    start() {
-        this.isGameRunning = true;
-        this.gameLoop();
-    }
-
-    stop() {
-        this.isGameRunning = false;
     }
 }

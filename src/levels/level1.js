@@ -9,19 +9,16 @@ const holes = [
 game.setHoles(holes);
 game.start();
 
-// const backAndForthPoints = [
-//     { x: 100, y: 300 },
-//     { x: 100, y: 300 },
-//     { x: 700, y: 300 },
-//     { x: 700, y: 300 }
-// ];
+const backAndForthPoints = [
+    { x: 100, y: 300 },
+    { x: 100, y: 300 },
+    { x: 700, y: 300 },
+    { x: 700, y: 300 }
+];
 
-// const spline = new Spline(backAndForthPoints, 0, 0.005);
+const spline = new Spline(backAndForthPoints, 0, 0.005);
 
-// const oldGameLoop = gameLoop;
-// gameLoop = function(ctx) {
-//     oldGameLoop(ctx);
-//     spline.update();
-//     spline.draw(ctx);    
-// };
+game.addAnimation((ctx) => {
+    spline.animate(ctx);
+});
 

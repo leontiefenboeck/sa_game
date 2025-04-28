@@ -6,6 +6,11 @@ class Spline {
     this.arcLengthTable = this.computeArcLengthTable(100);
   }
 
+  animate(ctx) {
+    this.update();
+    this.draw(ctx);
+  }
+
   update() {
     const totalLength = this.arcLengthTable[this.arcLengthTable.length - 1].length;
     const currentArcLength = (this.t * totalLength + this.speed * totalLength) % totalLength;
