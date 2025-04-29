@@ -108,9 +108,10 @@ class Game {
         ball.x += ball.vx * deltaSeconds;
         ball.y += ball.vy * deltaSeconds;
     
-        const friction = 0.9;
+        const frictionCoefficient = 0.3; 
+        const friction = Math.pow(frictionCoefficient, deltaSeconds);
         ball.vx *= friction;
-        ball.vy *= friction;
+        ball.vy *= friction
     
         if (ball.x - ball.radius < 0) {
             ball.x = ball.radius;
