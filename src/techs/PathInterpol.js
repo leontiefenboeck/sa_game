@@ -6,7 +6,10 @@ class Spline {
       this.position = { x: 0, y: 0 };
       this.t = 0; 
       this.arcLengthTable = this.precomputeArcLengthTable();
+      this.showVisualization = false;
   }
+
+  toggleVisualization() { this.showVisualization = !this.showVisualization; }
 
   update(delta) {
     this.t += this.traversalSpeed * delta / 1000;
@@ -21,6 +24,43 @@ class Spline {
     ctx.arc(this.position.x, this.position.y, 10, 0, Math.PI * 2);
     ctx.fillStyle = 'red';
     ctx.fill();
+
+    if (this.showVisualization) {
+      this.renderVisualization(ctx);
+    }
+  }
+
+  renderVisualization(ctx) {
+    // Render the spline curve
+    ctx.beginPath();
+    for (let t = 0; t <= 1; t += 0.01) {
+      const point = this.evaluate(t);
+      if (t === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        ctx.lineTo(point.x, point.y);
+      }
+    }
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Render control points
+    ctx.fillStyle = 'yellow';
+    for (const point of this.points) {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Render arc length samples
+    ctx.fillStyle = 'orange';
+    for (const entry of this.arcLengthTable) {
+      const samplePoint = this.evaluate(entry.t);
+      ctx.beginPath();
+      ctx.arc(samplePoint.x, samplePoint.y, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   evaluate(t) {
