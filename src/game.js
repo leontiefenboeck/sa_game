@@ -14,13 +14,16 @@ class Game {
             y: canvas.height - 100,
             radius: 15,
             vx: 0,
-            vy: 0
+            vy: 0,
+            isActive: false,
+            particle: null
         };
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
 
         this.addedUpdates = [];
         this.addedRenders = [];
+        this.particles = [];
 
         this.initEventListeners();
     }
@@ -64,6 +67,9 @@ class Game {
 
     initEventListeners() {
         this.canvas.addEventListener('mousedown', (e) => {
+            if (this.ball.isActive == true) {
+                return;
+            }
             this.isDragging = true;
             this.dragStart = { x: e.offsetX, y: e.offsetY };
         });
@@ -80,6 +86,10 @@ class Game {
                 this.ball.vy = (this.dragStart.y - dragEnd.y) * 5;
     
                 this.isDragging = false;
+                this.ball.isActive = true;
+                if (this.ball.particle != null) {
+                    this.ball.particle.speed = new Vector2(this.ball.vx, this.ball.vy);
+                }
             }
         });
     }
@@ -111,25 +121,48 @@ class Game {
         const frictionCoefficient = 0.3; 
         const friction = Math.pow(frictionCoefficient, deltaSeconds);
         ball.vx *= friction;
-        ball.vy *= friction
-    
-        if (ball.x - ball.radius < 0) {
-            ball.x = ball.radius;
-            ball.vx *= -1;
+        ball.vy *= friction;
+
+        if (ball.particle == null) {
+            const deltaSeconds = delta / 1000;
+            ball.x += ball.vx * deltaSeconds;
+            ball.y += ball.vy * deltaSeconds;
+            if (ball.x - ball.radius < 0) {
+                ball.x = ball.radius;
+                ball.vx *= -1;
+            }
+            if (ball.x + ball.radius > canvas.width) {
+                ball.x = canvas.width - ball.radius;
+                ball.vx *= -1;
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.y = ball.radius;
+                ball.vy *= -1;
+            }
+            if (ball.y + ball.radius > canvas.height) {
+                ball.y = canvas.height - ball.radius;
+                ball.vy *= -1;
+            }
         }
-        if (ball.x + ball.radius > canvas.width) {
-            ball.x = canvas.width - ball.radius;
-            ball.vx *= -1;
+        else {
+            if (ball.particle.location.x - ball.particle.radius < 0) {
+                ball.particle.location.x = ball.particle.radius;
+                ball.particle.speed.x *= -1;
+            }
+            if (ball.particle.location.x + ball.particle.radius > canvas.width) {
+                ball.particle.location.x = canvas.width - ball.particle.radius;
+                ball.particle.speed.x *= -1;
+            }
+            if (ball.particle.location.y - ball.particle.radius < 0) {
+                ball.particle.location.y = ball.particle.radius;
+                ball.particle.speed.y *= -1;
+            }
+            if (ball.particle.location.y + ball.particle.radius > canvas.height) {
+                ball.particle.location.y = canvas.height - ball.particle.radius;
+                ball.particle.speed.y *= -1;
+            }
+            ball.particle.update(this.particles, delta);
         }
-        if (ball.y - ball.radius < 0) {
-            ball.y = ball.radius;
-            ball.vy *= -1;
-        }
-        if (ball.y + ball.radius > canvas.height) {
-            ball.y = canvas.height - ball.radius;
-            ball.vy *= -1;
-        }
-    
         this.checkBallInHole();
     }
 
@@ -143,6 +176,26 @@ class Game {
     }
 
     drawGoalCircles() {
+        const { ctx, holes: goalCircles } = this;
+        ctx.fillStyle = 'green';
+        goalCircles.forEach(goal => {
+            ctx.beginPath();
+            ctx.arc(goal.x, goal.y, goal.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        });
+    }
+    drawAttractionCircles() {
+        const { ctx, holes: goalCircles } = this;
+        ctx.fillStyle = 'green';
+        goalCircles.forEach(goal => {
+            ctx.beginPath();
+            ctx.arc(goal.x, goal.y, goal.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        });
+    }
+    drawRepellingCircles() {
         const { ctx, holes: goalCircles } = this;
         ctx.fillStyle = 'green';
         goalCircles.forEach(goal => {
