@@ -100,9 +100,7 @@ class Particle {
     
     }
 
-    applyForce(particle, force) {
-        particle.F.add(force);
-    }
+
     RK4(particles, h){
 
         let player = particles[0];
