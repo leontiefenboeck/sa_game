@@ -72,6 +72,13 @@ ball bounces off of. For this reason we only added two splines to showcase, one 
 just a straight line. As for now the movement only loops but we plan to add the option to 
 make them move back and forth. 
 
+The code for this is located in the PathInterpol.js file. To construct a spline we only need the control points and 
+the traversal speed. Then we set the t values (basically how far along the spline we are) to $0$ and 
+precompute the arc length table. Then the spline is ready and waits until \texttt{update} is called. 
+In \texttt{update} we calculate the new value based on the current t value and the speed and then we make the 
+lookup in the arc length table and evaluate the spline at that value. We also have a render function 
+that just draws a circle at the current position (though in the future we also want to add different shapes).
+
 \subsection{Level 2}
 Level 2 showcases the particle dynamics. Here there are two repelling bodies in red and two attracting bodies in purple. Once the ball is shot, they start affecting it. The forces become more visible when a higher frame rate is selected. The force field created by the bodies and trajectory of the ball over the last few seconds can be visualized through the button. One can also change the integration method to choose between the RK4 and Euler methods. At the moment, only the ball is effected by the forces, while there is no effect on the other object from each other or from the ball. This might be changed in the future for more enjoyable level design. \newline
 

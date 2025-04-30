@@ -40,15 +40,6 @@ updateRateControl.addEventListener('input', () => {
     updateRateValue.textContent = newRate;
 });
 
-const speedControl = document.getElementById('speedControl');
-const speedValue = document.getElementById('speedValue');
-
-speedControl.addEventListener('input', () => {
-    const speed = parseFloat(speedControl.value);
-    //ADD CHANGE OF SPEED
-    speedValue.textContent = speed.toFixed(1);
-});
-
 const toggleVisualizationButton = document.getElementById('toggleVisualizationButton');
 toggleVisualizationButton.addEventListener('click', () => {
     if (!player.visTrail && !player.visArrows) {
