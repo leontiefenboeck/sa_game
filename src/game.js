@@ -161,7 +161,7 @@ class Game {
             }
             ball.particle.update(this.particles, delta);
         }
-    
+     
 
     
 
