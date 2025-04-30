@@ -84,6 +84,18 @@ by simply adding a delay to when the next iteration of this loop is called.
 We achieve the framerate independence also here, by calculating how long a frame took to produce 
 and then adjust all updates by this delta. 
 
+Next we have an individual class for each of the techs. Here everything should 
+also be confined and other parts of the game need only interact with the constructor
+and the \texttt{update} and \texttt{render} methods.
+
+Finally we have a file for each level that interacts with the main game 
+class and the different techs. Here we set up
+the objects and their techs in the respective level and the controls that are level specific (visualization, speed adjustment, etc.).
+If everything is set up we add the \texttt{update} and \texttt{render} methods of the objects (that come from the techs) 
+to the main game loop and the start the game by calling the loop.
+
+
+
 
 
 
