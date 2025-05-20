@@ -1,6 +1,7 @@
 class Spline {
-  constructor(points, traversalSpeed) {
+  constructor(points, object, traversalSpeed) {
       this.points = points; 
+      this.object = object;
       this.traversalSpeed = traversalSpeed; 
       
       this.position = { x: 0, y: 0 };
@@ -20,10 +21,7 @@ class Spline {
   }
 
   render(ctx) {
-    ctx.beginPath();
-    ctx.arc(this.position.x, this.position.y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
+    this.object.render(ctx, this.position);
 
     if (this.showVisualization) {
       this.renderVisualization(ctx);

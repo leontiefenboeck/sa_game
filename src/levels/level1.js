@@ -7,7 +7,7 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 const ctx = canvas.getContext('2d');
-const game = new Game(10, canvas);
+const game = new Game(60, canvas);
 
 let holes = [ 
     { x: 0.4, y: 0.1, radius: 0.02 }  
@@ -32,12 +32,15 @@ let wavePoints = [
     { x: 1.0,  y: 0.14 }
 ];
 
+const object1 = new GameObject(0.02, 'yellow', 'rect');
+const object2 = new GameObject(0.02, 'blue');
+
 wavePoints = wavePoints.map(p => toCanvasCoords(p, canvas));
 backAndForthPoints = backAndForthPoints.map(p => toCanvasCoords(p, canvas));
 
 const splines = [
-    new Spline(backAndForthPoints, 0.5),
-    new Spline(wavePoints, 0.5)
+    new Spline(backAndForthPoints, object1, 0.5),
+    new Spline(wavePoints, object2, 0.5)
 ];
 
 game.addUpdate((delta) => {
@@ -72,4 +75,6 @@ toggleVisualizationButton.addEventListener('click', () => {
     splines.forEach(spline => spline.toggleVisualization());
 });
 
+
+// start the game loop
 game.loop();
