@@ -13,4 +13,19 @@ function defineCircle(centerX, centerY, radius, segments) {
     points.push(points[1]); // Add the second point at the end
   
     return points;
-  }
+}
+
+function toCanvasCoords(point, canvas) {
+    return {
+        x: point.x * canvas.width,
+        y: point.y * canvas.height
+    };
+}
+
+function toCanvasCircle(circle, canvas) {
+    return {
+        x: circle.x * canvas.width,
+        y: circle.y * canvas.height,
+        radius: circle.radius * canvas.width // or use Math.min(canvas.width, canvas.height)
+    };
+}

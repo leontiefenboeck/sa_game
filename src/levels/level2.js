@@ -1,4 +1,11 @@
 const canvas = document.getElementById("gameCanvas");
+function resizeCanvas() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 const ctx = canvas.getContext("2d");
 const game = new Game(10, canvas);
 

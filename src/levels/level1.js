@@ -1,28 +1,39 @@
 const canvas = document.getElementById('gameCanvas');
+function resizeCanvas() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 const ctx = canvas.getContext('2d');
 const game = new Game(10, canvas);
 
-const holes = [ 
-    { x: 400, y: 100, radius: 20 }  
+let holes = [ 
+    { x: 0.4, y: 0.1, radius: 0.02 }  
 ];
+holes = holes.map(hole => toCanvasCircle(hole, canvas));
 game.setHoles(holes);
 
-const backAndForthPoints = [
-    { x: 100, y: 300 },
-    { x: 100, y: 300 },
-    { x: 700, y: 300 },
-    { x: 700, y: 300 }
+let backAndForthPoints = [
+    { x: 0.1, y: 0.3 },
+    { x: 0.1, y: 0.3 },
+    { x: 0.9, y: 0.3 },
+    { x: 0.9, y: 0.3 }
 ];
 
-const wavePoints = [
-    { x: 100, y: 100 },
-    { x: 200, y: 200 },
-    { x: 300, y: 100 },
-    { x: 400, y: 200 },
-    { x: 500, y: 100 },
-    { x: 600, y: 200 },
-    { x: 700, y: 100 }
+let wavePoints = [
+    { x: 0.14, y: 0.14 },
+    { x: 0.28, y: 0.28 },
+    { x: 0.42, y: 0.14 },
+    { x: 0.57, y: 0.28 },
+    { x: 0.71, y: 0.14 },
+    { x: 0.85, y: 0.28 },
+    { x: 1.0,  y: 0.14 }
 ];
+
+wavePoints = wavePoints.map(p => toCanvasCoords(p, canvas));
+backAndForthPoints = backAndForthPoints.map(p => toCanvasCoords(p, canvas));
 
 const splines = [
     new Spline(backAndForthPoints, 0.5),

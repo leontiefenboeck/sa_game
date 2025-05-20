@@ -7,27 +7,30 @@
 </head>
 <body>
 
-    <div class="controls-panel">
- 
-        <div class="control-group">
-            <label for="updateRateControl">Animation Update Rate (FPS):</label>
-            <input type="range" id="updateRateControl" min="1" max="60" step="1" value="10">
-            <span id="updateRateValue">10</span>
+    <div class="game-container">
+
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="updateRateControl">Animation Update Rate (FPS):</label>
+                <input type="range" id="updateRateControl" min="1" max="60" step="1" value="10">
+                <span id="updateRateValue">10</span>
+            </div>
+
+            <div class="control-group">
+                <button id="toggleVisualizationButton">Toggle Visualization</button>
+            </div>
+            <div class="control-group">
+                <button id="toggleIntegrationButton">Toggle Integration    <br> Currently: RK4</button>
+            </div>
+            <div class="control-group">
+                <p> Click, then drag and release the blue ball to give it momentum!</p>
+            </div>
         </div>
 
-        <div class="control-group">
-            <button id="toggleVisualizationButton">Toggle Visualization</button>
+        <div class="game-area">
+            <canvas id="gameCanvas"></canvas>
         </div>
-        <div class="control-group">
-            <button id="toggleIntegrationButton">Toggle Integration    <br> Currently: RK4</button>
-        </div>
-        <div class="control-group">
-            <p> Click, then drag and release the blue ball to give it momentum!</p>
-        </div>
-    </div>
-
-    <div class="game-area">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
     </div>
 
     <script src="../game.js"></script>
