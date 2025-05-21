@@ -12,8 +12,8 @@ class Spline {
 
   toggleVisualization() { this.showVisualization = !this.showVisualization; }
 
-  update(delta) {
-    this.t += this.traversalSpeed * delta / 1000;
+  update() {
+    this.t += this.traversalSpeed;
     if (this.t > 1) this.t = 0;
 
     const arcLengthT = this.mapArcLengthToT(this.t);

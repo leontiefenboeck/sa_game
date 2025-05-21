@@ -1,6 +1,7 @@
 class Game {
-    constructor(animationRate, canvas) {
+    constructor(animationRate, fps, canvas) {
         this.animationRate = animationRate;
+        this.fps = fps;
 
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -25,6 +26,9 @@ class Game {
         this.addedRenders = [];
         this.particles = [];
 
+        this.updateInterval = null;
+        this.renderInterval = null;
+
         this.initEventListeners();
     }
 
@@ -32,27 +36,32 @@ class Game {
     addRender(render) { this.addedRenders.push(render); }
     setHoles(holes) { this.holes = holes; }
 
-    loop(timestamp) {
-        if (!this.isGameRunning) {
-            this.renderLevelComplete();
-            return; 
-        }
+    start() {
+        this.isGameRunning = true;
 
-        let delta = 0;
-        if (this.lastFrameTime) { delta = timestamp - this.lastFrameTime; }
-        this.lastFrameTime = timestamp;
-
-        this.update(delta);
-        this.render();
-
-        setTimeout(() => {
-            requestAnimationFrame((timestamp) => this.loop(timestamp));
+        this.updateInterval = setInterval(() => {
+            if (this.isGameRunning) {
+                this.update();
+            }
         }, 1000 / this.animationRate);
+
+        this.renderInterval = setInterval(() => {
+            if (this.isGameRunning) {
+                this.render();
+            } else {
+                this.renderLevelComplete();
+            }
+        }, 1000 / this.fps);
     }
 
-    update(delta) {
-        this.updateBall(delta);
-        this.addedUpdates.forEach(update => update(delta));
+    stop() {
+        clearInterval(this.updateInterval);
+        clearInterval(this.renderInterval);
+    }
+
+    update() {
+        this.updateBall();
+        this.addedUpdates.forEach(update => update());
     }
 
     render() {  
@@ -63,6 +72,28 @@ class Game {
         this.drawGoalCircles();
         this.drawBall();
         this.addedRenders.forEach(render => render(ctx));
+    }
+
+    setAnimationRate(newRate) {
+        this.animationRate = newRate;
+        clearInterval(this.updateInterval);
+        this.updateInterval = setInterval(() => {
+            if (this.isGameRunning) {
+                this.update();
+            }
+        }, 1000 / this.animationRate);
+    }
+
+    setFps(newFps) {
+        this.fps = newFps;
+        clearInterval(this.renderInterval);
+        this.renderInterval = setInterval(() => {
+            if (this.isGameRunning) {
+                this.render();
+            } else {
+                this.renderLevelComplete();
+            }
+        }, 1000 / this.fps);
     }
 
     initEventListeners() {
@@ -82,8 +113,8 @@ class Game {
                     y: e.clientY - rect.top
                 };
     
-                this.ball.vx = (this.dragStart.x - dragEnd.x) * 5;
-                this.ball.vy = (this.dragStart.y - dragEnd.y) * 5;
+                this.ball.vx = (this.dragStart.x - dragEnd.x) * 0.1;
+                this.ball.vy = (this.dragStart.y - dragEnd.y) * 0.1;
     
                 this.isDragging = false;
                 this.ball.isActive = true;
@@ -111,22 +142,17 @@ class Game {
         return false;
     }
 
-    updateBall(delta) {
+    updateBall() {
         const { ball, canvas } = this;
+
+        ball.x += ball.vx;
+        ball.y += ball.vy;
     
-        const deltaSeconds = delta / 1000;
-        ball.x += ball.vx * deltaSeconds;
-        ball.y += ball.vy * deltaSeconds;
-    
-        const frictionCoefficient = 0.3; 
-        const friction = Math.pow(frictionCoefficient, deltaSeconds);
+        const friction = 0.99;
         ball.vx *= friction;
         ball.vy *= friction;
 
         if (ball.particle == null) {
-            const deltaSeconds = delta / 1000;
-            ball.x += ball.vx * deltaSeconds;
-            ball.y += ball.vy * deltaSeconds;
             if (ball.x - ball.radius < 0) {
                 ball.x = ball.radius;
                 ball.vx *= -1;

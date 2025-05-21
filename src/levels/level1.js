@@ -7,7 +7,7 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 const ctx = canvas.getContext('2d');
-const game = new Game(60, canvas);
+const game = new Game(60, 60, canvas);
 
 let holes = [ 
     { x: 0.4, y: 0.1, radius: 0.02 }  
@@ -39,8 +39,8 @@ wavePoints = wavePoints.map(p => toCanvasCoords(p, canvas));
 backAndForthPoints = backAndForthPoints.map(p => toCanvasCoords(p, canvas));
 
 const splines = [
-    new Spline(backAndForthPoints, object1, 0.5),
-    new Spline(wavePoints, object2, 0.5)
+    new Spline(backAndForthPoints, object1, 0.01),
+    new Spline(wavePoints, object2, 0.01)
 ];
 
 game.addUpdate((delta) => {
@@ -52,13 +52,22 @@ game.addRender((ctx) => {
 });
 
 // Controls
-const updateRateControl = document.getElementById('updateRateControl');
-const updateRateValue = document.getElementById('updateRateValue');
+const fps = document.getElementById('fpsControl');
+const fpsDisplay = document.getElementById('fpsDisplay');
 
-updateRateControl.addEventListener('input', () => {
-    const newRate = parseInt(updateRateControl.value, 10);
-    game.animationRate = newRate; 
-    updateRateValue.textContent = newRate;
+fps.addEventListener('input', () => {
+    const newRate = parseInt(fps.value, 10);
+    game.setFps(newRate); 
+    fpsDisplay.textContent = newRate;
+});
+
+const animationRate = document.getElementById('animationRateControl');
+const animationRateDisplay = document.getElementById('animationRateDisplay');
+
+animationRate.addEventListener('input', () => {
+    const newRate = parseInt(animationRate.value, 10);
+    game.setAnimationRate(newRate);
+    animationRateDisplay.textContent = newRate;
 });
 
 const speedControl = document.getElementById('speedControl');
@@ -77,4 +86,4 @@ toggleVisualizationButton.addEventListener('click', () => {
 
 
 // start the game loop
-game.loop();
+game.start();
