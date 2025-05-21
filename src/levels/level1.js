@@ -5,9 +5,9 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
-
 const ctx = canvas.getContext('2d');
-const game = new Game(60, 60, canvas);
+
+const game = new Game(canvas);
 
 let holes = [ 
     { x: 0.4, y: 0.1, radius: 0.02 }  
@@ -39,33 +39,30 @@ wavePoints = wavePoints.map(p => toCanvasCoords(p, canvas));
 backAndForthPoints = backAndForthPoints.map(p => toCanvasCoords(p, canvas));
 
 const splines = [
-    new Spline(backAndForthPoints, object1, 0.01),
+    new Spline(backAndForthPoints, object1, 0.01, false),
     new Spline(wavePoints, object2, 0.01)
 ];
 
-game.addUpdate((delta) => {
-    splines.forEach(spline => spline.update(delta));
-});
-
-game.addRender((ctx) => {
-    splines.forEach(spline => spline.render(ctx));
-});
+game.addUpdate((delta) => { splines.forEach(spline => spline.update(delta)); });
+game.addRender((ctx) => { splines.forEach(spline => spline.render(ctx)); });
 
 // Controls
-const fps = document.getElementById('fpsControl');
+const fpsControl = document.getElementById('fpsControl');
 const fpsDisplay = document.getElementById('fpsDisplay');
+fpsDisplay.textContent = game.fps;
 
-fps.addEventListener('input', () => {
-    const newRate = parseInt(fps.value, 10);
+fpsControl.addEventListener('input', () => {
+    const newRate = parseInt(fpsControl.value, 10);
     game.setFps(newRate); 
     fpsDisplay.textContent = newRate;
 });
 
-const animationRate = document.getElementById('animationRateControl');
+const animationRateControl = document.getElementById('animationRateControl');
 const animationRateDisplay = document.getElementById('animationRateDisplay');
+animationRateControl.textContent = game.animationRate;
 
-animationRate.addEventListener('input', () => {
-    const newRate = parseInt(animationRate.value, 10);
+animationRateControl.addEventListener('input', () => {
+    const newRate = parseInt(animationRateControl.value, 10);
     game.setAnimationRate(newRate);
     animationRateDisplay.textContent = newRate;
 });
@@ -84,6 +81,4 @@ toggleVisualizationButton.addEventListener('click', () => {
     splines.forEach(spline => spline.toggleVisualization());
 });
 
-
-// start the game loop
 game.start();

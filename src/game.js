@@ -1,10 +1,10 @@
 class Game {
-    constructor(animationRate, fps, canvas) {
-        this.animationRate = animationRate;
-        this.fps = fps;
-
+    constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+
+        this.animationRate = 60;
+        this.fps = 60;
 
         this.isGameRunning = true;
 
@@ -52,11 +52,6 @@ class Game {
                 this.renderLevelComplete();
             }
         }, 1000 / this.fps);
-    }
-
-    stop() {
-        clearInterval(this.updateInterval);
-        clearInterval(this.renderInterval);
     }
 
     update() {
@@ -125,23 +120,6 @@ class Game {
         });
     }
 
-    checkBallInHole() {
-        for (const goal of this.holes) {
-            const dx = this.ball.x - goal.x;
-            const dy = this.ball.y - goal.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < this.ball.radius + goal.radius) {
-                this.isGameRunning = false;
-                setTimeout(() => {
-                    window.history.back();
-                }, 3000); 
-                return true;
-            }
-        }
-        return false;
-    }
-
     updateBall() {
         const { ball, canvas } = this;
 
@@ -190,7 +168,39 @@ class Game {
             ball.particle.update(this.particles, delta);
         }
         this.checkBallInHole();
+        this.checkBallStopped();
     }
+
+    checkBallInHole() {
+        for (const goal of this.holes) {
+            const dx = this.ball.x - goal.x;
+            const dy = this.ball.y - goal.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < this.ball.radius + goal.radius) {
+                this.isGameRunning = false;
+                setTimeout(() => {
+                    window.history.back();
+                }, 3000); 
+                return true;
+            }
+        }
+        return false;
+    }
+
+    checkBallStopped() {
+        if (
+            this.ball.isActive &&
+            Math.abs(this.ball.vx) < 0.1 &&
+            Math.abs(this.ball.vy) < 0.1
+        ) {
+            this.ball.isActive = false; 
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); 
+        }
+    }
+
 
     drawBall() {
         const { ctx, ball } = this;
@@ -211,6 +221,7 @@ class Game {
             ctx.closePath();
         });
     }
+
     drawAttractionCircles() {
         const { ctx, holes: goalCircles } = this;
         ctx.fillStyle = 'green';
@@ -221,6 +232,7 @@ class Game {
             ctx.closePath();
         });
     }
+
     drawRepellingCircles() {
         const { ctx, holes: goalCircles } = this;
         ctx.fillStyle = 'green';
