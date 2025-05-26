@@ -44,7 +44,11 @@
 
 \maketitle
 
-\section{Game Documentation}
+\section{User Documentation}
+
+\subsection{Gameplay Overview}
+
+\subsection{Controls}
 
 So far we have implemented two levels, where each showcases 
 a different technique, however for the levels to be really complete and make sense to play the 
@@ -85,7 +89,14 @@ Level 2 showcases the particle dynamics. Here there are two repelling bodies in 
 The code for this is located in the ParticleDynamics.js file. There, the particle class with the necessary members is defined. It also holds the defineForces function, which takes all the particles into account, to calculate the effect they have onto the ball. The Rk4 an euler functions are used for the integration step and apply the results to the ball. The visualize and drawArrow functions are used to draw the particles, the trail and the force field. 
 Note: Pushing the visualization button once visualizes the trail, pushing again adds the field. Pushing a third time only visualizes the field and pushing a fourth time turns the visualization off again. 
 A vector class is also defined, which will be integrated into the other techs. 
-\section{Technical Specifications}
+
+\section{Technical Documentation}
+
+\subsection{Path Interpolation}
+
+\subsection{Particle Dynamics}
+
+\subsection{Voronoi Fracture}
 
 We implemented our game very modular way. We have one main game class that controls the game logic 
 and everything that is the same in each level. This class also includes one main loop that 

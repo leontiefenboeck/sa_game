@@ -15,13 +15,6 @@ function defineCircle(centerX, centerY, radius, segments) {
     return points;
 }
 
-function checkCircleCollision(a, b) {
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    return distance < (a.radius + b.radius);
-}
-
 function toCanvasCoords(point, canvas) {
     return {
         x: point.x * canvas.width,
