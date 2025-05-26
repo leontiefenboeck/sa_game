@@ -54,7 +54,7 @@ class Game {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        this.drawGoalCircles();
+        this.drawHoles();
         this.ball.render(ctx);
         this.splines.forEach(spline => spline.render(ctx));
         this.particles.forEach(particle => particle.render(ctx));
@@ -117,7 +117,7 @@ class Game {
             const dy = this.ball.y - hole.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < this.ball.radius + hole.radius) {
+            if (distance + this.ball.radius <= hole.radius) {
                 this.isGameRunning = false;
                 setTimeout(() => {
                     window.history.back();
@@ -128,14 +128,32 @@ class Game {
         return false;
     }
 
-    drawGoalCircles() {
-        const { ctx, holes: goalCircles } = this;
-        ctx.fillStyle = 'green';
-        goalCircles.forEach(goal => {
+    drawHoles() {
+        const { ctx, holes } = this;
+        holes.forEach(hole => {
+            const gradient = ctx.createRadialGradient(
+                hole.x, hole.y, hole.radius * 0.2, // inner circle (darker)
+                hole.x, hole.y, hole.radius        // outer circle (lighter)
+            );
+            gradient.addColorStop(0, '#222');      // very dark center
+            gradient.addColorStop(0.7, '#444');    // dark gray
+            gradient.addColorStop(1, '#888');      // lighter edge
+
             ctx.beginPath();
-            ctx.arc(goal.x, goal.y, goal.radius, 0, Math.PI * 2);
+            ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
             ctx.fill();
             ctx.closePath();
+
+            ctx.save();
+            ctx.globalAlpha = 0.2;
+            ctx.beginPath();
+            ctx.arc(hole.x, hole.y, hole.radius * 1.15, 0, Math.PI * 2);
+            ctx.fillStyle = '#000';
+            ctx.fill();
+            ctx.closePath();
+            ctx.globalAlpha = 1.0;
+            ctx.restore();
         });
     }
 

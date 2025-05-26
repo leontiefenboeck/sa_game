@@ -1,8 +1,8 @@
 class Ball {
     constructor() {
         this.x = canvas.width / 2;
-        this.y = canvas.height - 100;
-        this.radius = 15;
+        this.y = canvas.height - 0.15 * canvas.height;
+        this.radius = 0.012 * canvas.width; 
         this.vx = 0;
         this.vy = 0;
         this.isActive = false;
@@ -14,7 +14,7 @@ class Ball {
         this.x += this.vx;
         this.y += this.vy;
     
-        const friction = 0.98;
+        const friction = 0.99;
         this.vx *= friction;
         this.vy *= friction;
 
@@ -123,17 +123,6 @@ class Ball {
         gradient.addColorStop(0, '#fff');         // highlight
         gradient.addColorStop(0.3, '#ff6666');    // lighter red
         gradient.addColorStop(1, '#b20000');      // dark red
-
-        // Draw shadow
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(this.x, this.y + this.radius * 0.5, this.radius * 0.9, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = '#000';
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
-        ctx.restore();
 
         // Draw this with gradient
         ctx.beginPath();
