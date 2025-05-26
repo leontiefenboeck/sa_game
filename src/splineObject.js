@@ -1,4 +1,4 @@
-class GameObject {
+class splineObject {
   constructor(size, color, shape, texture) {
     this.size = size || 10;
     this.color = color || 'red';
@@ -7,7 +7,6 @@ class GameObject {
   }
 
   render(ctx, position) {
-    console.log("Rendering Object");
     const size = this.size * canvas.width;
 
     ctx.save();

@@ -32,8 +32,8 @@ let wavePoints = [
     { x: 1.0,  y: 0.14 }
 ];
 
-const object1 = new GameObject(0.02, 'yellow', 'rect');
-const object2 = new GameObject(0.02, 'blue');
+const object1 = new splineObject(0.02, 'yellow', 'rect');
+const object2 = new splineObject(0.02, 'blue');
 
 wavePoints = wavePoints.map(p => toCanvasCoords(p, canvas));
 backAndForthPoints = backAndForthPoints.map(p => toCanvasCoords(p, canvas));
@@ -43,8 +43,7 @@ const splines = [
     new Spline(wavePoints, object2, 0.01)
 ];
 
-game.addUpdate((delta) => { splines.forEach(spline => spline.update(delta)); });
-game.addRender((ctx) => { splines.forEach(spline => spline.render(ctx)); });
+game.splines = splines;
 
 // Controls
 const fpsControl = document.getElementById('fpsControl');

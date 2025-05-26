@@ -22,9 +22,8 @@ class Game {
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
 
-        this.addedUpdates = [];
-        this.addedRenders = [];
         this.particles = [];
+        this.splines = [];
 
         this.updateInterval = null;
         this.renderInterval = null;
@@ -32,8 +31,6 @@ class Game {
         this.initEventListeners();
     }
 
-    addUpdate(update) { this.addedUpdates.push(update); }
-    addRender(render) { this.addedRenders.push(render); }
     setHoles(holes) { this.holes = holes; }
 
     start() {
@@ -56,7 +53,7 @@ class Game {
 
     update() {
         this.updateBall();
-        this.addedUpdates.forEach(update => update());
+        this.splines.forEach(spline => spline.update());
     }
 
     render() {  
@@ -66,7 +63,8 @@ class Game {
 
         this.drawGoalCircles();
         this.drawBall();
-        this.addedRenders.forEach(render => render(ctx));
+        this.splines.forEach(spline => spline.render(ctx));
+        this.particles.forEach(particle => particle.render(ctx));
     }
 
     setAnimationRate(newRate) {
@@ -167,8 +165,44 @@ class Game {
             }
             ball.particle.update(this.particles, delta);
         }
+
+        if (this.splines) { 
+            for (const spline of splines) {
+                const obj = spline.object;
+                const pos = spline.position;
+                const obstacle = {
+                    x: pos.x,
+                    y: pos.y,
+                    radius: obj.size * canvas.width 
+                };
+                if (checkCircleCollision(ball, obstacle)) {
+                    this.bounceBall(ball, obstacle);
+                    // Optional: move ball out of collision
+                    const overlap = (ball.radius + obstacle.radius) - Math.sqrt((ball.x - obstacle.x) ** 2 + (ball.y - obstacle.y) ** 2);
+                    ball.x += (ball.x - obstacle.x) / Math.sqrt((ball.x - obstacle.x) ** 2 + (ball.y - obstacle.y) ** 2) * overlap;
+                    ball.y += (ball.y - obstacle.y) / Math.sqrt((ball.x - obstacle.x) ** 2 + (ball.y - obstacle.y) ** 2) * overlap;
+                }
+            }
+        }
+
         this.checkBallInHole();
         this.checkBallStopped();
+    }
+
+    bounceBall(ball, obstacle) {
+        // Calculate normal
+        const dx = ball.x - obstacle.x;
+        const dy = ball.y - obstacle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        // Dot product of velocity and normal
+        const dot = ball.vx * nx + ball.vy * ny;
+
+        // Reflect velocity
+        ball.vx = ball.vx - 2 * dot * nx;
+        ball.vy = ball.vy - 2 * dot * ny;
     }
 
     checkBallInHole() {
@@ -201,12 +235,11 @@ class Game {
         }
     }
 
-
     drawBall() {
         const { ctx, ball } = this;
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'blue';
+        ctx.fillStyle = 'red';
         ctx.fill();
         ctx.closePath();
     }

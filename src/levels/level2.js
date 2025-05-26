@@ -32,12 +32,6 @@ game.particles.push(obstacle2);
 game.particles.push(obstacle3);
 game.particles.push(obstacle4);
 
-
-
-game.addRender((ctx) => {
-    game.particles.forEach(particle => particle.render(game.particles, ctx));
-});
-
 const updateRateControl = document.getElementById('updateRateControl');
 const updateRateValue = document.getElementById('updateRateValue');
 
