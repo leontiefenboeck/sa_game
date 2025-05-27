@@ -34,24 +34,46 @@ let points1 = [
 ];
 
 let points2 = [
-    { x: 0.14, y: 0.14 },
-    { x: 0.28, y: 0.28 },
-    { x: 0.42, y: 0.14 },
-    { x: 0.57, y: 0.28 },
-    { x: 0.71, y: 0.14 },
-    { x: 0.85, y: 0.28 },
-    { x: 1.0,  y: 0.14 }
+    { x: 0, y: 0.6 },
+    { x: 0, y: 0.6 },
+    { x: 0.1, y: 0.5 },
+    { x: 0.3, y: 0.6 },
+    { x: 0.5, y: 0.5 },
+    { x: 0.7, y: 0.6 },
+    { x: 0.9, y: 0.5 },
+    { x: 1, y: 0.6 },
+    { x: 1, y: 0.6 }
 ];
 
-const object1 = new Rectangle(0.04, 0.02, canvas);
-const object2 = new Circle(0.02, canvas);
+let points3 = [
+    { x: 0.25, y: 0.15 },
+    { x: 0.25, y: 0.15 },
+    { x: 0.53, y: 0.15 },
+    { x: 0.53, y: 0.15 }
+];
+
+let points4 = [
+    { x: 0.25, y: 0.35 },
+    { x: 0.25, y: 0.35 },
+    { x: 0.53, y: 0.35 },
+    { x: 0.53, y: 0.35 }
+];
 
 points1 = points1.map(p => toCanvasCoords(p, canvas));
 points2 = points2.map(p => toCanvasCoords(p, canvas));
+points3 = points3.map(p => toCanvasCoords(p, canvas));
+points4 = points4.map(p => toCanvasCoords(p, canvas));
+
+const object1 = new Rectangle(0.04, 0.02, canvas);
+const object2 = new Circle(0.02, canvas);
+const object3 = new Rectangle(0.06, 0.02, canvas);
+const object4 = new Rectangle(0.06, 0.02, canvas);
 
 const splines = [
     new Spline(points1, object1, 0.01, false),
-    new Spline(points2, object2, 0.01)
+    // new Spline(points2, object2, 0.01, true, true),
+    new Spline(points3, object3, 0.01, false),
+    new Spline(points4, object4, 0.01, false),
 ];
 
 game.splines = splines;

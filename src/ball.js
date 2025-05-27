@@ -7,6 +7,54 @@ class Ball {
         this.vy = 0;
         this.isActive = false;
         this.particle = null;
+
+        // New flags for interaction
+        this.isDragging = false;
+        this.isHovered = false;
+        this.dragStart = null;
+    }
+
+    containsPoint(x, y) {
+        const dx = this.x - x;
+        const dy = this.y - y;
+        return Math.sqrt(dx * dx + dy * dy) <= this.radius;
+    }
+
+    onMouseDown(e, canvas) {
+        if (this.isActive) return false;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (this.containsPoint(x, y)) {
+            this.isDragging = true;
+            this.dragStart = { x, y };
+            return true;
+        }
+        return false;
+    }
+
+    onMouseMove(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        this.isHovered = this.containsPoint(x, y) && !this.isActive && !this.isDragging;
+    }
+
+    onMouseUp(e, canvas) {
+        if (!this.isDragging) return false;
+        const rect = canvas.getBoundingClientRect();
+        const dragEnd = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+        this.vx = (this.dragStart.x - dragEnd.x) * 0.2;
+        this.vy = (this.dragStart.y - dragEnd.y) * 0.2;
+        this.isDragging = false;
+        this.isActive = true;
+        if (this.particle != null) {
+            this.particle.speed = new Vector2(this.vx, this.vy);
+        }
+        return true;
     }
 
     update(splines, canvas) {
@@ -18,25 +66,7 @@ class Ball {
         this.vx *= friction;
         this.vy *= friction;
 
-        if (this.particle == null) {
-            if (this.x - this.radius < 0) {
-                this.x = this.radius;
-                this.vx *= -1;
-            }
-            if (this.x + this.radius > canvas.width) {
-                this.x = canvas.width - this.radius;
-                this.vx *= -1;
-            }
-            if (this.y - this.radius < 0) {
-                this.y = this.radius;
-                this.vy *= -1;
-            }
-            if (this.y + this.radius > canvas.height) {
-                this.y = canvas.height - this.radius;
-                this.vy *= -1;
-            }
-        }
-        else {
+        if (this.particle) {
             if (this.particle.location.x - this.particle.radius < 0) {
                 this.particle.location.x = this.particle.radius;
                 this.particle.speed.x *= -1;
@@ -134,6 +164,20 @@ class Ball {
     }
 
     render(ctx) {
+        // Visual indication for hover or dragging
+        if (this.isHovered || this.isDragging) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI * 2);
+            ctx.globalAlpha = this.isDragging ? 0.35 : 0.18;
+            ctx.strokeStyle = this.isDragging ? '#ffb347' : '#00bfff';
+            ctx.lineWidth = this.isDragging ? 8 : 5;
+            ctx.shadowColor = this.isDragging ? '#ffb347' : '#00bfff';
+            ctx.shadowBlur = this.isDragging ? 18 : 10;
+            ctx.stroke();
+            ctx.restore();
+        }
+
         // shadow
         ctx.save();
         ctx.globalAlpha = 0.5;

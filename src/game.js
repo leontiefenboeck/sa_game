@@ -86,29 +86,20 @@ class Game {
 
     initEventListeners() {
         this.canvas.addEventListener('mousedown', (e) => {
-            if (this.ball.isActive == true) {
-                return;
-            }
-            this.isDragging = true;
-            this.dragStart = { x: e.offsetX, y: e.offsetY };
+            this.ball.onMouseDown(e, this.canvas);
         });
-    
+
+        window.addEventListener('mousemove', (e) => {
+            this.ball.onMouseMove(e, this.canvas);
+        });
+
         window.addEventListener('mouseup', (e) => {
-            if (this.isDragging) {
-                const rect = this.canvas.getBoundingClientRect();
-                const dragEnd = {
-                    x: e.clientX - rect.left,
-                    y: e.clientY - rect.top
-                };
-    
-                this.ball.vx = (this.dragStart.x - dragEnd.x) * 0.1;
-                this.ball.vy = (this.dragStart.y - dragEnd.y) * 0.1;
-    
-                this.isDragging = false;
-                this.ball.isActive = true;
-                if (this.ball.particle != null) {
-                    this.ball.particle.speed = new Vector2(this.ball.vx, this.ball.vy);
-                }
+            this.ball.onMouseUp(e, this.canvas);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                window.location.reload();
             }
         });
     }
