@@ -10,19 +10,30 @@ const ctx = canvas.getContext('2d');
 const game = new Game(canvas);
 
 let holes = [ 
-    { x: 0.4, y: 0.1, radius: 0.02 }  
+    { x: 0.25, y: 0.25, radius: 0.02 }  
 ];
 holes = holes.map(hole => toCanvasCircle(hole, canvas));
-game.setHoles(holes);
+game.holes = holes;
 
-let backAndForthPoints = [
-    { x: 0.1, y: 0.3 },
-    { x: 0.1, y: 0.3 },
-    { x: 0.9, y: 0.3 },
-    { x: 0.9, y: 0.3 }
+let playableArea = [
+    { x: 0.42, y: 0.9 },
+    { x: 0.58, y: 0.9 },
+    { x: 0.58, y: 0.1 },
+    { x: 0.2, y: 0.1 },
+    { x: 0.2, y: 0.4 },
+    { x: 0.42, y: 0.4 }
+];
+playableArea = playableArea.map(p => toCanvasCoords(p, canvas));
+game.playableArea = createRoundedPolygonPath(playableArea, 0.015 * canvas.width);
+
+let points1 = [
+    { x: 0.44, y: 0.7 },
+    { x: 0.44, y: 0.7 },
+    { x: 0.56, y: 0.7 },
+    { x: 0.56, y: 0.7 }
 ];
 
-let wavePoints = [
+let points2 = [
     { x: 0.14, y: 0.14 },
     { x: 0.28, y: 0.28 },
     { x: 0.42, y: 0.14 },
@@ -32,15 +43,15 @@ let wavePoints = [
     { x: 1.0,  y: 0.14 }
 ];
 
-const object1 = new splineObject(0.02, 'yellow', 'rect');
-const object2 = new splineObject(0.02, 'blue');
+const object1 = new Rectangle(0.04, 0.02, canvas);
+const object2 = new Circle(0.02, canvas);
 
-wavePoints = wavePoints.map(p => toCanvasCoords(p, canvas));
-backAndForthPoints = backAndForthPoints.map(p => toCanvasCoords(p, canvas));
+points1 = points1.map(p => toCanvasCoords(p, canvas));
+points2 = points2.map(p => toCanvasCoords(p, canvas));
 
 const splines = [
-    new Spline(backAndForthPoints, object1, 0.01, false),
-    new Spline(wavePoints, object2, 0.01)
+    new Spline(points1, object1, 0.01, false),
+    new Spline(points2, object2, 0.01)
 ];
 
 game.splines = splines;

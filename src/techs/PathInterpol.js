@@ -6,7 +6,6 @@ class Spline {
       this.useEasing = useEasing;
       this.loop = loop;
 
-      this.position = { x: 0, y: 0 };
       this.t = 0; 
       this.direction = 1;
       this.arcLengthTable = this.precomputeArcLengthTable();
@@ -32,11 +31,11 @@ class Spline {
 
     const progressT = this.useEasing ? this.easeInOut(this.t) : this.t;
     const arcLengthT = this.mapArcLengthToT(progressT);
-    this.position = this.evaluate(arcLengthT);
+    this.object.position = this.evaluate(arcLengthT);
   }
 
   render(ctx) {
-    this.object.render(ctx, this.position);
+    this.object.render(ctx);
 
     if (this.showVisualization) {
       this.renderVisualization(ctx);
@@ -82,7 +81,6 @@ class Spline {
             return prev.t + alpha * (current.t - prev.t);
         }
     }
-    return 1; 
   }
 
   precomputeArcLengthTable(samples = 100) {
@@ -112,7 +110,7 @@ class Spline {
   }
 
   renderVisualization(ctx) {
-    // Render the spline curve
+    // spline curve
     ctx.beginPath();
     for (let t = 0; t <= 1; t += 0.01) {
       const point = this.evaluate(t);
@@ -126,7 +124,7 @@ class Spline {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Render control points
+    // control points
     ctx.fillStyle = 'yellow';
     for (const point of this.points) {
       ctx.beginPath();
@@ -134,7 +132,7 @@ class Spline {
       ctx.fill();
     }
 
-    // Render arc length samples
+    // arc length samples
     ctx.fillStyle = 'orange';
     for (const entry of this.arcLengthTable) {
       const samplePoint = this.evaluate(entry.t);

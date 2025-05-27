@@ -9,6 +9,7 @@ class Game {
         this.isGameRunning = true;
 
         this.holes = [];
+        this.playableArea = null;
 
         this.ball = new Ball();
         this.isDragging = false;
@@ -44,16 +45,17 @@ class Game {
     }
 
     update() {
-        this.ball.update(this.splines, this.canvas);
-        this.checkBallInHole();
         this.splines.forEach(spline => spline.update());
+        this.ball.update(this.splines, this.canvas);
+        this.checkBallOutOfBounds();
+        this.checkBallInHole();
     }
 
     render() {  
         const { ctx, canvas } = this;
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        this.drawPlayArea();
         this.drawHoles();
         this.ball.render(ctx);
         this.splines.forEach(spline => spline.render(ctx));
@@ -128,41 +130,100 @@ class Game {
         return false;
     }
 
+    checkBallOutOfBounds() {
+        if (!this.playableArea) return;
+        if (!this.ctx.isPointInPath(this.playableArea, this.ball.x, this.ball.y)) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 50); 
+        }
+    }
+
+    drawPlayArea() {
+        const { ctx } = this;
+        const area = this.playableArea;
+
+        ctx.save();
+        ctx.shadowColor = '#58b1e8';
+        ctx.shadowBlur = 25;
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#2c4352';
+        ctx.fill(area);
+        ctx.restore();
+    }
+
     drawHoles() {
         const { ctx, holes } = this;
         holes.forEach(hole => {
-            const gradient = ctx.createRadialGradient(
-                hole.x, hole.y, hole.radius * 0.2, // inner circle (darker)
-                hole.x, hole.y, hole.radius        // outer circle (lighter)
-            );
-            gradient.addColorStop(0, '#222');      // very dark center
-            gradient.addColorStop(0.7, '#444');    // dark gray
-            gradient.addColorStop(1, '#888');      // lighter edge
+            // Draw the cup (deep teal, fits play area)
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#93cefa'; 
+            ctx.shadowColor = '#93cefa';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.restore();
 
+            // Draw the inner shadow for depth
+            const gradient = ctx.createRadialGradient(
+                hole.x, hole.y, hole.radius * 0.2,
+                hole.x, hole.y, hole.radius
+            );
+            gradient.addColorStop(0, 'rgb(223, 246, 248)');
+            gradient.addColorStop(1, 'rgba(187, 244, 244, 0)');
+            ctx.save();
             ctx.beginPath();
             ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
             ctx.fillStyle = gradient;
             ctx.fill();
-            ctx.closePath();
-
-            ctx.save();
-            ctx.globalAlpha = 0.2;
-            ctx.beginPath();
-            ctx.arc(hole.x, hole.y, hole.radius * 1.15, 0, Math.PI * 2);
-            ctx.fillStyle = '#000';
-            ctx.fill();
-            ctx.closePath();
-            ctx.globalAlpha = 1.0;
             ctx.restore();
         });
     }
 
     renderLevelComplete() {
         const { ctx, canvas } = this;
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        ctx.fillStyle = 'black';
-        ctx.font = '48px Arial';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw rounded rectangle background
+        const boxWidth = 0.4 * canvas.width;
+        const boxHeight = 0.2 * canvas.height;
+        const boxX = (canvas.width - boxWidth) / 2;
+        const boxY = (canvas.height - boxHeight) / 2;
+        const radius = 30;
+
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 4;
+
+        // Rounded rectangle path
+        ctx.beginPath();
+        ctx.moveTo(boxX + radius, boxY);
+        ctx.lineTo(boxX + boxWidth - radius, boxY);
+        ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + radius);
+        ctx.lineTo(boxX + boxWidth, boxY + boxHeight - radius);
+        ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - radius, boxY + boxHeight);
+        ctx.lineTo(boxX + radius, boxY + boxHeight);
+        ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - radius);
+        ctx.lineTo(boxX, boxY + radius);
+        ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw shadowed text
+        ctx.save();
+        ctx.font = 'bold 48px Arial';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#888';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#222';
         ctx.fillText('Level Complete!', canvas.width / 2, canvas.height / 2);
+        ctx.restore();
     }
 }
