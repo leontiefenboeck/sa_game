@@ -8,23 +8,19 @@ class Game {
 
         this.isGameRunning = true;
 
-        this.holes = [];
+        this.ball = null;
+        this.hole = null;
         this.playableArea = null;
-
-        this.ball = new Ball();
-        this.isDragging = false;
-        this.dragStart = { x: 0, y: 0 };
 
         this.particles = [];
         this.splines = [];
+        this.rigidBodies = [];
 
         this.updateInterval = null;
         this.renderInterval = null;
 
         this.initEventListeners();
     }
-
-    setHoles(holes) { this.holes = holes; }
 
     start() {
         this.isGameRunning = true;
@@ -45,10 +41,19 @@ class Game {
     }
 
     update() {
-        this.splines.forEach(spline => spline.update());
-        this.ball.update(this.splines, this.canvas);
         this.checkBallOutOfBounds();
         this.checkBallInHole();
+        
+        for (let i = 0; i < this.rigidBodies.length; i++) {
+            for (let j = i + 1; j < this.rigidBodies.length; j++) {
+                const bodyA = this.rigidBodies[i];
+                const bodyB = this.rigidBodies[j];
+                bodyA.handleCollision(bodyB);
+            }
+        }
+
+        this.splines.forEach(spline => spline.update(1 / this.animationRate));
+        this.rigidBodies.forEach(body => body.update(1 / this.animationRate));
     }
 
     render() {  
@@ -57,8 +62,8 @@ class Game {
 
         this.drawPlayArea();
         this.drawHoles();
-        this.ball.render(ctx);
         this.splines.forEach(spline => spline.render(ctx));
+        this.rigidBodies.forEach(body => body.render(ctx));
         this.particles.forEach(particle => particle.render(ctx));
     }
 
@@ -105,25 +110,25 @@ class Game {
     }
 
     checkBallInHole() {
-        for (const hole of this.holes) {
-            const dx = this.ball.x - hole.x;
-            const dy = this.ball.y - hole.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        hole = this.hole;
+        const dx = this.ball.position.x - hole.x;
+        const dy = this.ball.position.y - hole.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance + this.ball.radius <= hole.radius) {
-                this.isGameRunning = false;
-                setTimeout(() => {
-                    window.history.back();
-                }, 3000); 
-                return true;
-            }
+        if (distance + this.ball.radius <= hole.radius) {
+            this.isGameRunning = false;
+            setTimeout(() => {
+                window.history.back();
+            }, 3000); 
+            return true;
         }
+        
         return false;
     }
 
     checkBallOutOfBounds() {
         if (!this.playableArea) return;
-        if (!this.ctx.isPointInPath(this.playableArea, this.ball.x, this.ball.y)) {
+        if (!this.ctx.isPointInPath(this.playableArea, this.ball.position.x, this.ball.position.y)) {
             setTimeout(() => {
                 window.location.reload();
             }, 50); 
@@ -138,38 +143,37 @@ class Game {
         ctx.shadowColor = '#58b1e8';
         ctx.shadowBlur = 25;
         ctx.globalAlpha = 0.8;
-        ctx.fillStyle = '#2c4352';
+        ctx.fillStyle = 'rgb(14, 66, 74)';
         ctx.fill(area);
         ctx.restore();
     }
 
     drawHoles() {
-        const { ctx, holes } = this;
-        holes.forEach(hole => {
-            // Draw the cup (deep teal, fits play area)
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#93cefa'; 
-            ctx.shadowColor = '#93cefa';
-            ctx.shadowBlur = 10;
-            ctx.fill();
-            ctx.restore();
+        const { ctx, hole } = this;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#93cefa'; 
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
 
-            // Draw the inner shadow for depth
-            const gradient = ctx.createRadialGradient(
-                hole.x, hole.y, hole.radius * 0.2,
-                hole.x, hole.y, hole.radius
-            );
-            gradient.addColorStop(0, 'rgb(223, 246, 248)');
-            gradient.addColorStop(1, 'rgba(187, 244, 244, 0)');
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            ctx.restore();
-        });
+        ctx.restore();
+
+        // Draw the inner shadow for depth
+        const gradient = ctx.createRadialGradient(
+            hole.x, hole.y, hole.radius * 0.2,
+            hole.x, hole.y, hole.radius
+        );
+        gradient.addColorStop(0, 'rgb(223, 246, 248)');
+        gradient.addColorStop(1, 'rgba(187, 244, 244, 0.39)');
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(hole.x, hole.y, hole.radius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.restore();
     }
 
     renderLevelComplete() {

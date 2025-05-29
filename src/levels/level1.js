@@ -9,11 +9,11 @@ const ctx = canvas.getContext('2d');
 
 const game = new Game(canvas);
 
-let holes = [ 
-    { x: 0.25, y: 0.25, radius: 0.02 }  
-];
-holes = holes.map(hole => toCanvasCircle(hole, canvas));
-game.holes = holes;
+let ball = new RigidBall(toCanvasCoords({x: 0.5, y: 0.8}, canvas), 0.015 * canvas.width);
+game.ball = ball;
+
+let hole = { x: 0.25, y: 0.25, radius: 0.02 };
+game.hole = toCanvasCircle(hole, canvas);
 
 let playableArea = [
     { x: 0.42, y: 0.9 },
@@ -26,14 +26,30 @@ let playableArea = [
 playableArea = playableArea.map(p => toCanvasCoords(p, canvas));
 game.playableArea = createRoundedPolygonPath(playableArea, 0.015 * canvas.width);
 
+// splines 
+
 let points1 = [
-    { x: 0.44, y: 0.7 },
-    { x: 0.44, y: 0.7 },
-    { x: 0.56, y: 0.7 },
-    { x: 0.56, y: 0.7 }
-];
+    { x: 0.25, y: 0.13 },
+    { x: 0.25, y: 0.13 },
+    { x: 0.53, y: 0.13 },
+    { x: 0.53, y: 0.13 }
+].map(p => toCanvasCoords(p, canvas));
 
 let points2 = [
+    { x: 0.56, y: 0.25 },
+    { x: 0.56, y: 0.25 },
+    { x: 0.56, y: 0.4 },
+    { x: 0.56, y: 0.4 }
+].map(p => toCanvasCoords(p, canvas));
+
+let points3 = [
+    { x: 0.25, y: 0.35 },
+    { x: 0.25, y: 0.35 },
+    { x: 0.35, y: 0.35 },
+    { x: 0.35, y: 0.35 }
+].map(p => toCanvasCoords(p, canvas));
+
+let points4 = [
     { x: 0, y: 0.6 },
     { x: 0, y: 0.6 },
     { x: 0.1, y: 0.5 },
@@ -43,40 +59,32 @@ let points2 = [
     { x: 0.9, y: 0.5 },
     { x: 1, y: 0.6 },
     { x: 1, y: 0.6 }
+].map(p => toCanvasCoords(p, canvas));
+
+const object1 = new KinematicRectangleBody({x: 0, y: 0}, 0.06 * canvas.width, 0.02 * canvas.height);
+const object2 = new KinematicRectangleBody({x: 0, y: 0}, 0.06 * canvas.width, 0.02 * canvas.height, Math.PI / 2);
+const object3 = new KinematicRectangleBody({x: 0, y: 0}, 0.06 * canvas.width, 0.02 * canvas.height);
+const object4 = new KinematicCircleBody({x: 0, y: 0}, 0.02 * canvas.width);
+
+game.splines = [
+    new Spline(points1, object1, false, true),
+    new Spline(points2, object2, false),
+    new Spline(points3, object3, false),
+    new Spline(points4, object4, true, false, 0.005),
 ];
 
-let points3 = [
-    { x: 0.25, y: 0.15 },
-    { x: 0.25, y: 0.15 },
-    { x: 0.53, y: 0.15 },
-    { x: 0.53, y: 0.15 }
-];
-
-let points4 = [
-    { x: 0.25, y: 0.35 },
-    { x: 0.25, y: 0.35 },
-    { x: 0.53, y: 0.35 },
-    { x: 0.53, y: 0.35 }
-];
-
-points1 = points1.map(p => toCanvasCoords(p, canvas));
-points2 = points2.map(p => toCanvasCoords(p, canvas));
-points3 = points3.map(p => toCanvasCoords(p, canvas));
-points4 = points4.map(p => toCanvasCoords(p, canvas));
-
-const object1 = new Rectangle(0.04, 0.02, canvas);
-const object2 = new Circle(0.02, canvas);
-const object3 = new Rectangle(0.06, 0.02, canvas);
-const object4 = new Rectangle(0.06, 0.02, canvas);
-
-const splines = [
-    new Spline(points1, object1, 0.01, false),
-    // new Spline(points2, object2, 0.01, true, true),
-    new Spline(points3, object3, 0.01, false),
-    new Spline(points4, object4, 0.01, false),
-];
-
-game.splines = splines;
+// rigid bodies
+game.rigidBodies = [
+    ball,
+    object1,
+    object2,
+    object3,
+    object4,
+    new RectangleBody(toCanvasCoords({x: 0.6, y: 0.7}, canvas), 0.03 * canvas.width, 0.04 * canvas.height, 0, {x: -10, y: 0}),
+    new RectangleBody(toCanvasCoords({x: 0.4, y: 0.73}, canvas), 0.03 * canvas.width, 0.04 * canvas.height, 0, {x: 10, y: 0}),
+    new RectangleBody(toCanvasCoords({x: 0.6, y: 0.6}, canvas), 0.03 * canvas.width, 0.04 * canvas.height, 0, {x: -10, y: 0}),
+    new RectangleBody(toCanvasCoords({x: 0.4, y: 0.63}, canvas), 0.03 * canvas.width, 0.04 * canvas.height, 0, {x: 10, y: 0}),
+]
 
 // Controls
 const fpsControl = document.getElementById('fpsControl');
@@ -108,13 +116,14 @@ speedControl.value = 0.01;
 
 speedControl.addEventListener('input', () => {
     const speed = parseFloat(speedControl.value);
-    splines.forEach(spline => spline.traversalSpeed = speed);
+    game.splines.forEach(spline => spline.traversalSpeed = speed);
     speedValue.textContent = speed.toFixed(3); 
 });
 
 const toggleVisualizationButton = document.getElementById('toggleVisualizationButton');
 toggleVisualizationButton.addEventListener('click', () => {
-    splines.forEach(spline => spline.toggleVisualization());
+    game.splines.forEach(spline => spline.toggleVisualization());
+    game.rigidBodies.forEach(body => body.toggleVisualization());
 });
 
 game.start();

@@ -1,5 +1,5 @@
 class Spline {
-  constructor(points, object, traversalSpeed, loop = true, useEasing = false) {
+  constructor(points, object, loop = true, useEasing = false, traversalSpeed = 0.01) {
       this.points = points; 
       this.object = object;
       this.traversalSpeed = traversalSpeed; 
@@ -14,7 +14,7 @@ class Spline {
 
   toggleVisualization() { this.showVisualization = !this.showVisualization; }
 
-  update() {
+  update(dt) {
     if (this.loop) {
       this.t += this.traversalSpeed;
       if (this.t > 1) this.t = 0;
@@ -29,14 +29,18 @@ class Spline {
       }
     }
 
+    const prevPos = { ...this.object.position };
+
     const progressT = this.useEasing ? this.easeInOut(this.t) : this.t;
     const arcLengthT = this.mapArcLengthToT(progressT);
-    this.object.position = this.evaluate(arcLengthT);
+    const pos = this.evaluate(arcLengthT);
+    this.object.position.x = pos.x;
+    this.object.position.y = pos.y;
+    this.object.linearMomentum.x = (this.object.position.x - prevPos.x) * this.object.mass / dt;
+    this.object.linearMomentum.y = (this.object.position.y - prevPos.y) * this.object.mass / dt;
   }
 
   render(ctx) {
-    this.object.render(ctx);
-
     if (this.showVisualization) {
       this.renderVisualization(ctx);
     }
@@ -44,17 +48,19 @@ class Spline {
 
   evaluate(t) {
     const segmentCount = this.points.length - 3;
-    const scaledT = t * segmentCount;
+    const safeT = Math.min(t, 0.9999); // prevent t === 1
+    const scaledT = safeT * segmentCount;
     const segmentIndex = Math.floor(scaledT);
     const localT = scaledT - segmentIndex;
 
-    const p0 = this.points[Math.max(0, segmentIndex)];
-    const p1 = this.points[Math.min(segmentIndex + 1, this.points.length - 1)];
-    const p2 = this.points[Math.min(segmentIndex + 2, this.points.length - 1)];
-    const p3 = this.points[Math.min(segmentIndex + 3, this.points.length - 1)];
+    const p0 = this.points[segmentIndex];
+    const p1 = this.points[segmentIndex + 1];
+    const p2 = this.points[segmentIndex + 2];
+    const p3 = this.points[segmentIndex + 3];
 
     return this.interpolate(localT, p0, p1, p2, p3);
   }
+
 
   interpolate(t, p0, p1, p2, p3) {
     const tt = t * t;
@@ -81,6 +87,7 @@ class Spline {
             return prev.t + alpha * (current.t - prev.t);
         }
     }
+    return 0;
   }
 
   precomputeArcLengthTable(samples = 100) {
