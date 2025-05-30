@@ -23,10 +23,10 @@ player.radius = game.ball.radius;
 player.ball = game.ball;
 player.ball.particle = player;
 
-let obstacle1 = new Particle(new Vector2(canvas.width * 2 / 3 + 35, canvas.height - 135), 1000);
-let obstacle2 = new Particle(new Vector2(canvas.width *6/ 7 + 43, canvas.height - 289), 1000);
-let obstacle3 = new Particle(new Vector2(canvas.width * 1 / 4 + 12, canvas.height - 380), 1000);
-let obstacle4 = new Particle(new Vector2(canvas.width *3/ 5 + 13, canvas.height - 512), 1000);
+let obstacle1 = new Particle(new Vector2(canvas.width * 2 / 3 + 35, canvas.height *0.6), 1000);
+let obstacle2 = new Particle(new Vector2(canvas.width *6/ 7 + 43, canvas.height * 0.7), 1000);
+let obstacle3 = new Particle(new Vector2(canvas.width * 1 / 4 + 12, canvas.height *0.8), 1000);
+let obstacle4 = new Particle(new Vector2(canvas.width * 0.8 + 13, canvas.height * 0.9), 1000);
 obstacle2.attract = false;
 obstacle3.attract = false;
 
@@ -34,8 +34,8 @@ let obstacle5 = new Particle(new Vector2(canvas.width * 2 / 3 + 35, canvas.heigh
 let obstacle6 = new Particle(new Vector2(canvas.width *6/ 7 + 43, canvas.height * 0.2), 1000);
 let obstacle7 = new Particle(new Vector2(canvas.width * 1 / 4 + 12, canvas.height * 0.3), 1000);
 let obstacle8 = new Particle(new Vector2(canvas.width *3/ 5 + 13, canvas.height *0.1), 1000);
-obstacle6.attract = false;
-obstacle8.attract = false;
+obstacle7.attract = false;
+obstacle5.attract = false;
 
 game.particles.push(player);
 game.particles.push(obstacle1);
