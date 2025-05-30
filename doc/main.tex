@@ -53,7 +53,7 @@
 
 \subsection{Gameplay Overview}
 
-In our game are three possible levels to be played which feature different techniques: the first contains rigid body collision and path interpolation, the second particle dynamics and the third voronoi fracture. 
+Our game consists of three playable levels which feature different techniques: the first contains rigid body collision and path interpolation, the second particle dynamics and the third Voronoi fracture. 
 The main concept is the same in all levels, namely putting the small red ball into the white glowing hole. 
 In each level this is achieved by using the respective technique.
 
@@ -62,10 +62,10 @@ In each level this is achieved by using the respective technique.
 The game is started by opening \texttt{main.html} which opens a 
 start screen where one can choose between the three levels. 
 
-When starting a level you see, at the bottom of the screen, the ball. This ball can be moved 
+When starting a level the ball can be seen at the bottom of the screen. This ball can be moved 
 by clicking it, dragging somewhere and then releasing the mouse button. 
-The ball will move in the opposite direction of where was dragged and the momentum of the 
-ball depends on how far back was dragged, much like a spring. This is indicated by an arrow that appears below the ball.
+The ball will move in the opposite direction of where the cursor was dragged and the momentum of the 
+ball depends on how far back it was dragged, much like a spring. This is indicated by an arrow that appears below the ball.
 Somewhere else in the game area there is a hole, which, to set it apart from the other game objects, 
 is very bright and glows a little bit. This is the hole 
 the ball should go into. If the player manages that, the level is completed.
@@ -77,13 +77,12 @@ Lastly the game can be paused by pressing the \texttt{Escape} key and resumed by
 \section{Technical Documentation}
 
 \subsection{General Remarks}
-We implemented our game in a very modular way. We have two main game classes that control the game logic 
-and everything that is the same in each level. There are two, since we realized that using different classes would be simpler than making one class work for all techs. These classes also includes one main loop that 
-updates the position of objects and renders them. We can very easily add other objects from other parts in the 
+We implemented our game in a very modular way. We have two similar game classes that control the game logic. There are two, since we realized that using different classes would be simpler than making one class work for all techs. These classes include the main loops that 
+update the position of objects and render them. We can very easily add other objects from other parts in the 
 code to this loop. We can adjust the animation update rate here 
 by simply adding a delay to when the next iteration of this loop is called. 
-We achieve the frame rate independence also here, by calculating how long a frame took to produce 
-and then adjust all updates by this delta. 
+We achieve the frame rate independence here as well, by calculating how long a frame took to produce 
+and then adjusting all updates by this delta. 
 
 Next we have an individual class for each of the techs. Here everything should 
 also be confined and other parts of the game need only interact with the constructor
@@ -99,14 +98,11 @@ on are still in absolutes so the might differ on different displays.
 
 \subsection{Techs}
 
-\subsubsection{Voronoi Fracture}
-Level 1 showcases the Vornonoi Fracture. The fractured object is an octagon. When the ball gets close to it, the process of fracture starts. The visualization button can be used after the object fractures. It first shows the seed points, then the intersection of the distance field between the mesh and the Voronoi distance field. When hit again, first the seed points and then the field are deactivated. The visualization is only available after the collision, since the slides specified, that the fragmentation calculations should be performed at runtime after impact. The toggle noise button can be pressed before the collision to enable or disable the fracture with noise in the Voronoi fields.
 
-The code for this is located in VoronoiFracture,js. There the "Voronoi" class is defined which holds all the necessary data and methods. On start the image for the object is loaded. Once the ball is close enough to the object, the Voronoi seeds are distributed randomly in a bounding box around the object and Perlin noise with the same bounding box is calculated. Next, the SDF is calculated by iterating over all pixels in the bounding box. Here the noise is added to the location of the pixels. After that the mesh of the object is defined and its SDF calculated. Next, the intersection of both SDFs is created and used to calculate which pixels belong to which fragment. Each pixel gets its color values from the image. Finally, the fragments are assigned random velocities, which are scaled by the animation rate. Through this, after impact the object fragments with each part moving seemingly randomly
 
 \subsubsection{Path Interpolation}
 
-This is shown in level 2. Some of the objects (colored in pink) are moving along a spline path. 
+This is shown in level 1. Some of the objects (colored in pink) are moving along a spline path. 
 To construct a spline we basically only need the control points, that an object should go through, and an 
 object that moves along this spline. Here theoretically we could always just draw a simple circle but 
 for our game we wanted that the main ball can bounce off the path interpolated objects, so we used stationary rigid bodies
@@ -125,7 +121,7 @@ to then use the Catmull-Rom interpolation formula to get a new point.
 
 \subsubsection{Rigid-Body Dynamics}
 
-This tech is also shown in level 2. Here basically all objects (colored in yellow) that are not controlled by a spline (although as mentioned above these do act as stationary rigid bodies) are rigid bodies, except the hole.
+This tech is also shown in level 1. Here basically all objects (colored in yellow) that are not controlled by a spline (although as mentioned above these do act as stationary rigid bodies) are rigid bodies, except the hole.
 The main ball also is a rigid body, where the player can apply some momentum. 
 
 A rigid body is defined by its position, mass, shape and linear as well as angular momentum. 
@@ -158,11 +154,16 @@ For this we use the formulas from the slides and approximate the contact point b
 works well enough for our game.
 
 \subsubsection{Particle Dynamics}
-Level 3 showcases particle dynamics. Here there are two repelling bodies in red and two attracting bodies in purple. Once the ball is shot, they start affecting it. The force field created by the bodies and trajectory of the ball over the last few seconds can be visualized through the button. One can also change the integration method to choose between the RK4 and Euler methods. Only the ball is effected by the forces, while there is no effect on the other object from each other or from the ball.  \newline
+Level 2 showcases particle dynamics. Here there are several repelling bodies in red and attracting bodies in purple. Once the ball is shot, they start affecting it. The force field created by the bodies and trajectory of the ball over the last few seconds can be visualized through the button. One can also change the integration method to choose between the RK4 and Euler methods. Only the ball is effected by the forces, while there is no effect on the other object from each other or from the ball.  \newline
 
-The code for this is located in the ParticleDynamics.js file. There, the particle class with the necessary members is defined. It also holds the defineForces function, which takes all the particles into account, to calculate the effect they have onto the ball. The Rk4 an euler functions are used for the integration step and apply the results to the ball. The visualize and drawArrow functions are used to draw the particles, the trail and the force field. 
+The code for this is located in the ParticleDynamics.js file. There, the particle class with the necessary members is defined. It also holds the defineForces function, which takes all the particles into account, to calculate the effect they have onto the ball. The Rk4 and Euler functions are used for the integration step and apply the results to the ball. The visualize and drawArrow functions are used to draw the particles, the trail and the force field. 
 Note: Pushing the visualization button once visualizes the trail, pushing again adds the field. Pushing a third time only visualizes the field and pushing a fourth time turns the visualization off again. 
 A vector class is also defined, which will be integrated into the other techs. 
+
+\subsubsection{Voronoi Fracture}
+Level 3 showcases the Vornonoi Fracture. The fractured object is an octagon. When the ball gets close to it, the process of fracture starts. The visualization button can be used after the object fractures. It first shows the seed points, then the intersection of the distance field between the mesh and the Voronoi distance field. When hit again, first the seed points and then the field are deactivated. The visualization is only available after the collision, since the slides specified, that the fragmentation calculations should be performed at runtime after impact. The toggle noise button can be pressed before the collision to enable or disable the fracture with noise in the Voronoi fields.
+
+The code for this is located in VoronoiFracture.js. There the "Voronoi" class is defined which holds all the necessary data and methods. On start the image for the object is loaded. Once the ball is close enough to the object and impact occurs, the Voronoi seeds are distributed randomly in a bounding box around the object and Perlin noise with the same bounding box is calculated. Next, the SDF is calculated by iterating over all pixels in the bounding box and finding the distance to the nearest border. Here the noise is added to the location of the pixels. After that the mesh of the object is defined and its SDF calculated. Next, the intersection of both SDFs is created and used to calculate which pixels belong to which fragment. Each pixel gets its color values from the corresponding spot on the image. Finally, the fragments are assigned random velocities, which are scaled with the animation rate. Through this, after impact the object fragments with each part moving seemingly randomly.
 
 \section{References}
 
