@@ -1,5 +1,5 @@
 class Spline {
-    constructor(points, object, loop = true, useEasing = false, traversalSpeed = 0.01) {
+    constructor(points, object, loop = true, useEasing = false, traversalSpeed = 0.5) {
         this.points = points; 
         this.object = object;
         this.traversalSpeed = traversalSpeed; 
@@ -18,10 +18,10 @@ class Spline {
 
     update(dt) {
         if (this.loop) {
-        this.s += this.traversalSpeed;
+        this.s += this.traversalSpeed * dt;
         if (this.s > 1) this.s = 0;
         } else {
-        this.s += this.traversalSpeed * this.direction;
+        this.s += this.traversalSpeed * this.direction * dt;
         if (this.s > 1) {
             this.s = 1;
             this.direction = -1;
