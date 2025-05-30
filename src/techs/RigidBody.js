@@ -172,17 +172,6 @@ class RectangleBody extends RigidBody {
     }
 }
 
-class KinematicRectangleBody extends RectangleBody {
-    constructor(position, width, height, rotation = 0) {
-        super(position, width, height, rotation);
-        this.kinematic = true;
-        this.mass = 100; 
-        this.inertia = 100; 
-    }
-
-    update(dt) {}
-}
-
 class CircleBody extends RigidBody {
     constructor(position, radius, rotation, linearMomentum, angularMomentum) {
         super(position, rotation, linearMomentum, angularMomentum);
@@ -244,6 +233,17 @@ class CircleBody extends RigidBody {
         ctx.stroke();
         ctx.restore();
     }
+}
+
+class KinematicRectangleBody extends RectangleBody {
+    constructor(position, width, height, rotation = 0) {
+        super(position, width, height, rotation);
+        this.kinematic = true;
+        this.mass = 100; 
+        this.inertia = 100; 
+    }
+
+    update(dt) {}
 }
 
 class KinematicCircleBody extends CircleBody {

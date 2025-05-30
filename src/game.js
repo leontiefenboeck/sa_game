@@ -143,7 +143,7 @@ class Game {
         ctx.shadowColor = '#58b1e8';
         ctx.shadowBlur = 25;
         ctx.globalAlpha = 0.8;
-        ctx.fillStyle = 'rgb(14, 66, 74)';
+        ctx.fillStyle = 'rgb(48, 53, 196)';
         ctx.fill(area);
         ctx.restore();
     }

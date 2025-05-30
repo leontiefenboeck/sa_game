@@ -1,120 +1,119 @@
 class Spline {
-  constructor(points, object, loop = true, useEasing = false, traversalSpeed = 0.01) {
-      this.points = points; 
-      this.object = object;
-      this.traversalSpeed = traversalSpeed; 
-      this.useEasing = useEasing;
-      this.loop = loop;
+    constructor(points, object, loop = true, useEasing = false, traversalSpeed = 0.01) {
+        this.points = points; 
+        this.object = object;
+        this.traversalSpeed = traversalSpeed; 
+        this.useEasing = useEasing;
+        this.loop = loop;
 
-      this.t = 0; 
-      this.direction = 1;
-      this.arcLengthTable = this.precomputeArcLengthTable();
-      this.showVisualization = false;
-  }
+        this.numSegments = points.length - 3;
 
-  toggleVisualization() { this.showVisualization = !this.showVisualization; }
-
-  update(dt) {
-    if (this.loop) {
-      this.t += this.traversalSpeed;
-      if (this.t > 1) this.t = 0;
-    } else {
-      this.t += this.traversalSpeed * this.direction;
-      if (this.t > 1) {
-        this.t = 1;
-        this.direction = -1;
-      } else if (this.t < 0) {
-        this.t = 0;
+        this.s = 0; 
         this.direction = 1;
-      }
+        this.arcLengthTable = this.precomputeArcLengthTable();
+        this.showVisualization = false;
     }
 
-    const prevPos = { ...this.object.position };
+    toggleVisualization() { this.showVisualization = !this.showVisualization; }
 
-    const progressT = this.useEasing ? this.easeInOut(this.t) : this.t;
-    const arcLengthT = this.mapArcLengthToT(progressT);
-    const pos = this.evaluate(arcLengthT);
-    this.object.position.x = pos.x;
-    this.object.position.y = pos.y;
-    this.object.linearMomentum.x = (this.object.position.x - prevPos.x) * this.object.mass / dt;
-    this.object.linearMomentum.y = (this.object.position.y - prevPos.y) * this.object.mass / dt;
-  }
-
-  render(ctx) {
-    if (this.showVisualization) {
-      this.renderVisualization(ctx);
-    }
-  }
-
-  evaluate(t) {
-    const segmentCount = this.points.length - 3;
-    const safeT = Math.min(t, 0.9999); // prevent t === 1
-    const scaledT = safeT * segmentCount;
-    const segmentIndex = Math.floor(scaledT);
-    const localT = scaledT - segmentIndex;
-
-    const p0 = this.points[segmentIndex];
-    const p1 = this.points[segmentIndex + 1];
-    const p2 = this.points[segmentIndex + 2];
-    const p3 = this.points[segmentIndex + 3];
-
-    return this.interpolate(localT, p0, p1, p2, p3);
-  }
-
-
-  interpolate(t, p0, p1, p2, p3) {
-    const tt = t * t;
-    const ttt = tt * t;
-
-    const q0 = -ttt + 2 * tt - t;
-    const q1 = 3 * ttt - 5 * tt + 2;
-    const q2 = -3 * ttt + 4 * tt + t;
-    const q3 = ttt - tt;
-
-    const x = 0.5 * (p0.x * q0 + p1.x * q1 + p2.x * q2 + p3.x * q3);
-    const y = 0.5 * (p0.y * q0 + p1.y * q1 + p2.y * q2 + p3.y * q3);
-
-    return { x, y };
-  }
-
-  mapArcLengthToT(arcLength) {
-    for (let i = 1; i < this.arcLengthTable.length; i++) {
-        const prev = this.arcLengthTable[i - 1];
-        const current = this.arcLengthTable[i];
-
-        if (arcLength >= prev.length && arcLength <= current.length) {
-            const alpha = (arcLength - prev.length) / (current.length - prev.length);
-            return prev.t + alpha * (current.t - prev.t);
+    update(dt) {
+        if (this.loop) {
+        this.s += this.traversalSpeed;
+        if (this.s > 1) this.s = 0;
+        } else {
+        this.s += this.traversalSpeed * this.direction;
+        if (this.s > 1) {
+            this.s = 1;
+            this.direction = -1;
+        } else if (this.s < 0) {
+            this.s = 0;
+            this.direction = 1;
         }
+        }
+
+        const prevPos = { ...this.object.position }; // creates a copy -- weird syntax
+
+        const t = this.mapArcLengthToT(this.useEasing ? this.easeInOut(this.s) : this.s);
+        const pos = this.evaluate(t);
+
+        this.object.position.x = pos.x;
+        this.object.position.y = pos.y;
+        this.object.linearMomentum.x = (this.object.position.x - prevPos.x) * this.object.mass / dt;
+        this.object.linearMomentum.y = (this.object.position.y - prevPos.y) * this.object.mass / dt;
     }
-    return 0;
-  }
 
-  precomputeArcLengthTable(samples = 100) {
-    const table = [];
-    let totalLength = 0;
-
-    let prevPoint = this.evaluate(0);
-    for (let i = 1; i <= samples; i++) {
-        const t = i / samples;
-        const currentPoint = this.evaluate(t);
-        const dx = currentPoint.x - prevPoint.x;
-        const dy = currentPoint.y - prevPoint.y;
-        const segmentLength = Math.sqrt(dx * dx + dy * dy);
-
-        totalLength += segmentLength;
-        table.push({ t, length: totalLength });
-        prevPoint = currentPoint;
+    render(ctx) {
+        if (this.showVisualization) this.renderVisualization(ctx);
     }
-    table.forEach(entry => entry.length /= totalLength);
-    return table;
-  }
 
-  easeInOut(t) {
-    return t < 0.5
-      ? 2 * t * t
-      : -1 + (4 - 2 * t) * t;
-  }
+    evaluate(t) {
+        const scaledT = t * this.numSegments; 
+        const segmentIndex = Math.floor(scaledT); // for 4 points always the same
+        const localT = scaledT - segmentIndex;
+
+        const p0 = this.points[segmentIndex];
+        const p1 = this.points[segmentIndex + 1];
+        const p2 = this.points[segmentIndex + 2];
+        const p3 = this.points[segmentIndex + 3];
+
+        return this.interpolate(localT, p0, p1, p2, p3);
+    }
+
+    interpolate(t, p0, p1, p2, p3) {
+        return { 
+            x: this.catmullrom(t, p0.x, p1.x, p2.x, p3.x),
+            y: this.catmullrom(t, p0.y, p1.y, p2.y, p3.y)
+        };
+    }
+
+    catmullrom(t, p0, p1, p2, p3) { // copied from slides
+        return 0.5 * (
+            (2 * p1) +
+            (-p0 + p2) * t +
+            (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
+            (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t
+        );
+    }
+
+    mapArcLengthToT(s) {
+        if (s <= 0) return 0;
+        if (s >= 1) return 0.999; // to avoid out of bounds
+
+        for (let i = 1; i < this.arcLengthTable.length; i++) {
+            const prev = this.arcLengthTable[i - 1];
+            const current = this.arcLengthTable[i];
+
+            if (s >= prev.length && s <= current.length) {
+                const alpha = (s - prev.length) / (current.length - prev.length) // interpolate between lengths
+                return prev.t + alpha * (current.t - prev.t); // interpolate between t values 
+            }
+        }
+        return 0;
+    }
+
+    precomputeArcLengthTable(samples = 100) {
+        const table = [];
+        let totalLength = 0;
+        let prev = this.evaluate(0);
+
+        for (let i = 1; i < samples; i++) {
+            const t = i / samples;
+            const current = this.evaluate(t);
+            const dx = current.x - prev.x;
+            const dy = current.y - prev.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            totalLength += length;
+            table.push({ t, length: totalLength });
+            prev = current;
+        }
+
+        table.forEach(entry => entry.length /= totalLength); // normalize lenghts
+        return table;
+    }
+
+    easeInOut(s) {
+        return 0.5 * (1 - Math.cos(Math.PI * s));
+    }
 
   renderVisualization(ctx) {
     // spline curve

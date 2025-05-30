@@ -26,9 +26,7 @@ class RigidBall extends CircleBody {
             Math.abs(vy) < 0.1
         ) {
             this.isActive = false;
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            window.location.reload();
         }
     }
 
@@ -133,13 +131,13 @@ class RigidBall extends CircleBody {
             }
         }
 
-        // --- Ball Shadow ---
+        // Ball Shadow 
         ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 4;
         ctx.shadowOffsetY = 4;
 
-        // --- Ball Gradient ---
+        // Ball Gradient
         const gradient = ctx.createRadialGradient(
             this.position.x - this.radius * 0.4, this.position.y - this.radius * 0.4, this.radius * 0.2,
             this.position.x, this.position.y, this.radius
