@@ -7,7 +7,7 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 const ctx = canvas.getContext('2d');
-const game = new Game(canvas);
+const game = new Game2(canvas);
 
 let holes = [
     { x: 0.4, y: 0.1, radius: 0.02 }
