@@ -40,6 +40,12 @@ class Game {
         }, 1000 / this.fps);
     }
 
+    stop() {
+        this.isGameRunning = false;
+        clearInterval(this.updateInterval);
+        clearInterval(this.renderInterval);
+    }
+
     update() {
         this.checkBallOutOfBounds();
         this.checkBallInHole();
@@ -105,6 +111,10 @@ class Game {
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' || e.key === ' ') {
                 window.location.reload();
+            }
+            if (e.code === 'Escape' || e.key === 'Escape') {
+                if (this.isGameRunning) this.stop();
+                else this.start();
             }
         });
     }
