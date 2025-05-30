@@ -1,10 +1,10 @@
 class Voronoi {
-    constructor(numPoints) {
+    constructor(numPoints,x,y) {
         this.num_points = numPoints,
         this.voronoi_points = [],
         this.voronoi_pixels = [],
-        this.x = 0,
-        this.y = 0
+        this.x = x,
+        this.y = y
         this.width = 300,
         this.height = 300,
         this.maxDist = 0,
@@ -15,8 +15,8 @@ class Voronoi {
 
         this.noise = [],
         this.gridSize = 30,
-        this.scale = 0,
-
+        this.scale = 20,
+        this.noiseOverlay = false,
 
         this.verteces = [],
         this.radius = 150,
@@ -27,12 +27,12 @@ class Voronoi {
         this.fragmentObjects = [],
         this.imageData = 0,
         this.imageCanvas,
-        this.fractured = false
+        this.fractured = false,
+        this.displayPoints = false,
+        this.displayDistanceField = false
 
     }
     getImage() {
-
-        
 
         const img = document.getElementById("stopImage");
 
@@ -45,17 +45,11 @@ class Voronoi {
 
         this.imageData = ctx.getImageData(0, 0, this.imageCanvas.width, this.imageCanvas.height);
 
-
-
-       
-
     }
 
 
-    createPoints(x,y)
+    createPoints()
     {
-        this.x = x;
-        this.y = y;
 
         for(let i = 0; i < this.num_points; i++)
         {
@@ -118,12 +112,20 @@ class Voronoi {
         for (var x = this.x; x < this.width + this.x; x++) {
             for (var y = this.y; y < this.height + this.y; y++) {
 
+                let noiseX = x;
+                let noiseY = y;
+                if (this.noiseOverlay) {
+                    noiseX += this.noise[Math.round(y - this.y)][Math.round(x - this.x)];
+                    noiseY += this.noise[Math.round(y - this.y)][Math.round(x - this.x)];
+                }
 
                 let closest = 0;
                 let minDist = Infinity;
                 for (let i = 0; i < this.voronoi_points.length; i++) {
                     const p = this.voronoi_points[i];
-                    const d2 = (p.x - x) ** 2 + (p.y - y) ** 2;
+
+
+                    const d2 = (p.x - noiseX) ** 2 + (p.y - noiseY) ** 2;
 
                     if (d2 < minDist) {
                         minDist = d2;
@@ -135,6 +137,7 @@ class Voronoi {
 
                 let closest_neighbour = 0;
                 minDist = Infinity;
+
                 for (var neighbour = 0; neighbour < this.voronoi_points.length; neighbour++) {
                     if (neighbour == closest) {
                         continue;
@@ -142,7 +145,7 @@ class Voronoi {
                     const pb = this.voronoi_points[neighbour];
 
 
-                    let d = this.getDistanceToEdge(x, y, pa, pb);
+                    let d = this.getDistanceToEdge(noiseX, noiseY, pa, pb);
 
                     if (Math.abs(d) < Math.abs(minDist)) {
                         minDist = d;
@@ -150,8 +153,8 @@ class Voronoi {
                     }
                 }
 
-                this.voronoi_pixels.push({ x, y, region: closest, distance: minDist });
 
+                this.voronoi_pixels.push({ x, y, region: closest, distance: minDist });
 
             }
         }
@@ -180,9 +183,9 @@ class Voronoi {
 
 
         const d = (vx * dx + vy * dy) / length;
-   
-        
-        return d + this.noise[Math.round(y - this.y)][Math.round(x - this.x)]; 
+
+
+        return d 
 
     }
 
@@ -239,7 +242,7 @@ class Voronoi {
         //this.createMeshCanvas();
 
         this.combineSDF();
-        //this.createCombinedCanvas();
+        this.createCombinedCanvas();
         //this.createFragmentCanvas();
     }
 
@@ -324,6 +327,11 @@ class Voronoi {
     }
 
     hit() {
+
+        fractureObject.createPoints();
+        fractureObject.computeVoronoiDiagram();
+        fractureObject.createMesh();
+
         for (var i = 0; i < this.fragmentObjects.length; i++) {
             this.fragmentObjects[i].vx = (Math.random() - 0.5) ;
             this.fragmentObjects[i].vy = (Math.random() - 0.5);
@@ -337,7 +345,7 @@ class Voronoi {
         let ctx = this.offscreenCtx;
         for (const { x, y, region, distance } of this.voronoi_pixels) {
 
-            const norm = Math.min(Math.abs(distance) / this.maxDist, 1);
+            const norm = Math.min(Math.abs(distance) / 40, 1);
 
             const r = Math.floor(255 * (1 - norm));
             const g = Math.floor(255 * norm);
@@ -398,10 +406,7 @@ class Voronoi {
         }
     }
 
-    drawVoronoi(ctx) {
-        ctx.drawImage(this.offscreenCanvas, this.x, this.y);
-
-    }
+  
 
 
     drawNoise(ctx) { 
@@ -412,7 +417,7 @@ class Voronoi {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 const value = this.noise[y][x]; 
-                const gray = Math.floor(value * 255);
+                const gray = Math.floor(value * 255/this.scale);
 
                 imageData.data[index++] = gray; 
                 imageData.data[index++] = gray;
@@ -426,15 +431,7 @@ class Voronoi {
 
  
 
-
-
-    visualize(ctx)
-    {
-
-        this.drawVoronoi(ctx);
-        //this.drawNoise(ctx);
-
-        
+    drawPoints(ctx) {
         for (let point of this.voronoi_points) {
             ctx.beginPath();
             ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
@@ -443,25 +440,47 @@ class Voronoi {
             ctx.fill();
             ctx.closePath();
         }
+    }
+    drawVoronoi(ctx) {
+        ctx.drawImage(this.offscreenCanvas, this.x, this.y);
 
+    }
 
-        if (this.fractured) {
-            for (let frag of this.fragmentObjects) {
-                frag.x += frag.vx;
-                frag.y += frag.vy;
-                frag.angle += frag.va;
+    drawFragments(ctx) {
+        for (let frag of this.fragmentObjects) {
+            frag.x += frag.vx;
+            frag.y += frag.vy;
+            frag.angle += frag.va;
 
-                ctx.save();
-                ctx.translate(frag.x + this.width / 2, frag.y + this.height / 2);
-                ctx.rotate(frag.angle);
-                ctx.translate(-this.width / 2, -this.height / 2);
-                ctx.drawImage(frag.canvas, 0, 0);
-                ctx.restore();
-            }
+            ctx.save();
+            ctx.translate(frag.x + this.width / 2, frag.y + this.height / 2);
+            ctx.rotate(frag.angle);
+            ctx.translate(-this.width / 2, -this.height / 2);
+            ctx.drawImage(frag.canvas, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    visualize(ctx)
+    {
+
+        if (this.displayDistanceField) {
+            this.drawVoronoi(ctx);
         }
         else {
-            ctx.putImageData(this.imageData, this.x, this.y);
+            if (this.fractured) {
+                this.drawFragments(ctx);
+            }
+            else {
+                ctx.putImageData(this.imageData, this.x, this.y);
+            }
         }
+        if (this.displayPoints) {
+            this.drawPoints(ctx);
+        }
+
+
+
         
 
         

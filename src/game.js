@@ -118,11 +118,13 @@ class Game {
                 this.ball.isActive = true;
                 if (this.ball.particle != null) {
                     this.ball.particle.speed = new Vector2(this.ball.vx, this.ball.vy);
+
+                }
+                if (this.fracture) {
+                    this.fracture.hit();
                 }
             }
-            if (this.fracture) {
-                this.fracture.hit();
-            }
+
         });
     }
 

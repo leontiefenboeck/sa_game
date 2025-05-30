@@ -16,12 +16,41 @@ holes = holes.map(hole => toCanvasCircle(hole, canvas));
 game.setHoles(holes);
 
 
-let fractureObject = new Voronoi(20);
+let fractureObject = new Voronoi(20, game.canvas.width / 3, game.canvas.height / 3);
 fractureObject.getImage();
-fractureObject.createPoints(game.canvas.width/3, game.canvas.height/3);
-fractureObject.computeVoronoiDiagram();
-fractureObject.createMesh();
+
+
 
 game.fracture = fractureObject;
+
+
+const toggleVisualizationButton = document.getElementById('toggleVisualizationButton');
+toggleVisualizationButton.addEventListener('click', () => {
+    if (!fractureObject.displayPoints && !fractureObject.displayDistanceField) {
+        fractureObject.displayPoints = true;
+    }
+    else if (fractureObject.displayPoints && !fractureObject.displayDistanceField) {
+        fractureObject.displayDistanceField = true;
+    }
+    else if (fractureObject.displayPoints && fractureObject.displayDistanceField) {
+        fractureObject.displayPoints = false;
+    }
+    else if (!fractureObject.displayPoints && fractureObject.displayDistanceField) {
+        fractureObject.displayDistanceField = false;
+    }
+});
+
+const toggleNoiseButton = document.getElementById('toggleNoiseButton');
+toggleNoiseButton.addEventListener('click', () => {
+
+    if (fractureObject.noiseOverlay) {
+        toggleNoiseButton.innerText = 'Toggle Noise-Overlay \n Currently: No Noise';
+    }
+    else {
+        toggleNoiseButton.innerText = 'Toggle Noise-Overlay \n Currently: With Noise';
+    }
+    fractureObject.noiseOverlay = !fractureObject.noiseOverlay;
+
+});
 
 game.start();
