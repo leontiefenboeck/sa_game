@@ -50,23 +50,22 @@
 
 \subsection{Controls}
 
-So far we have implemented two levels, where each showcases 
-a different technique, however for the levels to be really complete and make sense to play the 
-second technique is needed (per level). 
+There are three possible levels to be played: the first contains rigid body collision and path interpolation, the second particle dynamics and the third voronoi fracture. 
 
 The game is started by opening \texttt{main.html} which opens a 
 start screen where one can choose between the two levels. 
-The main concept is the same in both levels: 
-In the bottom of the game area there is a blue ball that can be moved 
+The main concept is the same in all levels: 
+In the bottom of the game area there is a ball that can be moved 
 by clicking it, dragging somewhere and then releasing the mouse button. 
 The ball will move in the opposite direction of where was dragged and the momentum of the 
 ball depends on how far back was dragged, much like a spring. 
-Somewhere else in the game area there is a green circle. This is the hole where 
+Somewhere else in the game area there is a hole. This is the hole 
 the ball should go into. If the player manages to get to the ball into the hole the level is completed 
 and they are put back into the main menu. 
 On the left side of the screen there is the control panel where level specific techs 
 and the overall animation update rate can be adjusted. Here one can also toggle the needed visualizations 
-for different techs. Now below we will outline the different levels and their techs. 
+for different techs. Now below we will outline the different levels and their techs.
+Additionally, the levels can be paused using the "escape" key.
 
 \subsection{Level 1}
 
@@ -84,22 +83,21 @@ lookup in the arc length table and evaluate the spline at that value. We also ha
 that just draws a circle at the current position (though in the future we also want to add different shapes).
 
 \subsection{Level 2}
-Level 2 showcases the particle dynamics. Here there are two repelling bodies in red and two attracting bodies in purple. Once the ball is shot, they start affecting it. The forces become more visible when a higher frame rate is selected. The force field created by the bodies and trajectory of the ball over the last few seconds can be visualized through the button. One can also change the integration method to choose between the RK4 and Euler methods. At the moment, only the ball is effected by the forces, while there is no effect on the other object from each other or from the ball. This might be changed in the future for more enjoyable level design. \newline
+Level 2 showcases the particle dynamics. Here there are two repelling bodies in red and two attracting bodies in purple. Once the ball is shot, they start affecting it. The force field created by the bodies and trajectory of the ball over the last few seconds can be visualized through the button. One can also change the integration method to choose between the RK4 and Euler methods. Only the ball is effected by the forces, while there is no effect on the other object from each other or from the ball.  \newline
 
 The code for this is located in the ParticleDynamics.js file. There, the particle class with the necessary members is defined. It also holds the defineForces function, which takes all the particles into account, to calculate the effect they have onto the ball. The Rk4 an euler functions are used for the integration step and apply the results to the ball. The visualize and drawArrow functions are used to draw the particles, the trail and the force field. 
 Note: Pushing the visualization button once visualizes the trail, pushing again adds the field. Pushing a third time only visualizes the field and pushing a fourth time turns the visualization off again. 
 A vector class is also defined, which will be integrated into the other techs. 
 
+\subsection{Level 3}
+Level 3 showcases the Vornonoi Fracture. The fractured object is an octagon. When the ball gets close to it, the process of fracture starts. The visualization button can be used after the object fractures. It first shows the seed points, then the intersection of the distance field between the mesh and the Voronoi distance field. When hit again, first the seed points and then the field are deactivated. The visualization is only available after the collision, since the slides specified, that the fragmentation calculations should be performed at runtime after impact. The toggle noise button can be pressed before the collision to enable or disable the fracture with noise in the Voronoi fields.
+
+The code for this is located in VoronoiFracture,js. There the "Voronoi" class is defined which holds all the necessary data and methods. On start the image for the object is loaded. Once the ball is close enough to the object, the Voronoi seeds are distributed randomly in a bounding box around the object and Perlin noise with the same bounding box is calculated. Next, the SDF is calculated by iterating over all pixels in the bounding box. Here the noise is added to the location of the pixels. After that the mesh of the object is defined and its SDF calculated. Next, the intersection of both SDFs is created and used to calculate which pixels belong to which fragment. Each pixel gets its color values from the image. Finally, the fragments are assigned random velocities, which are scaled by the animation rate. Through this, after impact the object fragments with each part moving seemingly randomly
 \section{Technical Documentation}
 
-\subsection{Path Interpolation}
 
-\subsection{Particle Dynamics}
-
-\subsection{Voronoi Fracture}
-
-We implemented our game very modular way. We have one main game class that controls the game logic 
-and everything that is the same in each level. This class also includes one main loop that 
+We implemented our game in a very modular way. We have two main game classes that controls the game logic 
+and everything that is the same in each level. There are two, since we realized that using different classes would be simpler than making one class work for all techs. These classes also includes one main loop that 
 updates the position of objects and renders them. We can very easily add other objects from other parts in the 
 code to this loop. We can adjust the animation update rate here 
 by simply adding a delay to when the next iteration of this loop is called. 

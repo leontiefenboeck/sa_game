@@ -29,7 +29,9 @@ class Voronoi {
         this.imageCanvas,
         this.fractured = false,
         this.displayPoints = false,
-        this.displayDistanceField = false
+        this.displayDistanceField = false,
+        this.animationRate = 60,
+        this.fractured = false
 
     }
     getImage() {
@@ -326,6 +328,14 @@ class Voronoi {
         }
     }
 
+    checkForHit(x,y)
+    {
+        if(!this.fractured && Math.abs(x - this.x - this.width/2) < this.radius - 15 && Math.abs(y - this.y-  this.height/2) < this.radius  - 15)
+        {
+            this.hit();
+            this.fractured = true;
+        }
+    }
     hit() {
 
         fractureObject.createPoints();
@@ -448,9 +458,9 @@ class Voronoi {
 
     drawFragments(ctx) {
         for (let frag of this.fragmentObjects) {
-            frag.x += frag.vx;
-            frag.y += frag.vy;
-            frag.angle += frag.va;
+            frag.x += frag.vx * this.animationRate/5;
+            frag.y += frag.vy* this.animationRate/5;
+            frag.angle += frag.va* this.animationRate/5;
 
             ctx.save();
             ctx.translate(frag.x + this.width / 2, frag.y + this.height / 2);

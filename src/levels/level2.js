@@ -30,19 +30,43 @@ let obstacle4 = new Particle(new Vector2(canvas.width *3/ 5 + 13, canvas.height 
 obstacle2.attract = false;
 obstacle3.attract = false;
 
+let obstacle5 = new Particle(new Vector2(canvas.width * 2 / 3 + 35, canvas.height *0.4), 1000);
+let obstacle6 = new Particle(new Vector2(canvas.width *6/ 7 + 43, canvas.height * 0.2), 1000);
+let obstacle7 = new Particle(new Vector2(canvas.width * 1 / 4 + 12, canvas.height * 0.3), 1000);
+let obstacle8 = new Particle(new Vector2(canvas.width *3/ 5 + 13, canvas.height *0.1), 1000);
+obstacle6.attract = false;
+obstacle8.attract = false;
+
 game.particles.push(player);
 game.particles.push(obstacle1);
 game.particles.push(obstacle2);
 game.particles.push(obstacle3);
 game.particles.push(obstacle4);
+game.particles.push(obstacle5);
+game.particles.push(obstacle6);
+game.particles.push(obstacle7);
+game.particles.push(obstacle8);
 
-const updateRateControl = document.getElementById('updateRateControl');
-const updateRateValue = document.getElementById('updateRateValue');
+const fpsControl = document.getElementById('fpsControl');
+const fpsDisplay = document.getElementById('fpsDisplay');
+fpsDisplay.textContent = game.fps;
+fpsControl.value = game.fps;
 
-updateRateControl.addEventListener('input', () => {
-    const newRate = parseInt(updateRateControl.value, 10);
-    game.animationRate = newRate;
-    updateRateValue.textContent = newRate;
+fpsControl.addEventListener('input', () => {
+    const newRate = parseInt(fpsControl.value);
+    game.setFps(newRate); 
+    fpsDisplay.textContent = newRate;
+});
+
+const animationRateControl = document.getElementById('animationRateControl');
+const animationRateDisplay = document.getElementById('animationRateDisplay');
+animationRateDisplay.textContent = game.animationRate;
+animationRateControl.value = game.animationRate;
+
+animationRateControl.addEventListener('input', () => {
+    const newRate = parseInt(animationRateControl.value);
+    game.setAnimationRate(newRate);
+    animationRateDisplay.textContent = newRate;
 });
 
 const toggleVisualizationButton = document.getElementById('toggleVisualizationButton');
