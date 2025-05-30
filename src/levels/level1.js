@@ -70,7 +70,7 @@ game.splines = [
     new Spline(points1, object1, false, true),
     new Spline(points2, object2, false),
     new Spline(points3, object3, false),
-    new Spline(points4, object4, true, false, 0.005),
+    new Spline(points4, object4, true, false, 0.3),
 ];
 
 // rigid bodies
@@ -111,8 +111,8 @@ animationRateControl.addEventListener('input', () => {
 
 const speedControl = document.getElementById('speedControl');
 const speedValue = document.getElementById('speedValue');
-speedValue.textContent = 0.01;
-speedControl.value = 0.01;
+speedValue.textContent = 0.5;
+speedControl.value = 0.5;
 
 speedControl.addEventListener('input', () => {
     const speed = parseFloat(speedControl.value);

@@ -7,10 +7,15 @@ const RIGIDBODY_DENSITY = 0.0001; // to calculate mass and intertia, adjusted to
 
 class RigidBody {
     constructor(position, rotation = 0, linearMomentum = {x: 0, y: 0}, angularMomentum = 0) {
+        // state variables
         this.position = position; 
         this.rotation = rotation;
         this.linearMomentum = linearMomentum;
         this.angularMomentum = angularMomentum;
+
+        // things to apply
+        this.force = { x: 0, y: 0 };
+        this.torque = 0;
 
         this.showVisualization = false;
     }
@@ -18,14 +23,21 @@ class RigidBody {
     toggleVisualization() { this.showVisualization = !this.showVisualization; }
 
     update(dt) {
-        const drag = 0.99;
-        this.linearMomentum.x *= drag;
-        this.linearMomentum.y *= drag;
-        this.angularMomentum *= drag;
+        // apply drag
+        const drag = 0.4;
+        this.addForce({x: -drag * this.linearMomentum.x, y: -drag * this.linearMomentum.y}); 
+        this.addTorque(-drag * this.angularMomentum); 
 
-        this.position.x += this.velocity.x * dt;
-        this.position.y += this.velocity.y * dt;
-        this.rotation += this.angularVelocity * dt;
+        // velocity verlet intgration 
+        this.position.x += this.velocity.x * dt + 0.5 * this.acceleration.x * dt * dt;
+        this.position.y += this.velocity.y * dt + 0.5 * this.acceleration.y * dt * dt;
+        this.rotation += this.angularVelocity * dt + 0.5 * this.angularAcceleration * dt * dt;
+
+        this.linearMomentum.x += this.force.x * dt; // velocity += acceleration * dt
+        this.linearMomentum.y += this.force.y * dt;
+        this.angularMomentum += this.torque * dt; // angular velocity += angular acceleration * dt
+
+        this.clearForces();
     }
 
     get velocity() {
@@ -37,6 +49,32 @@ class RigidBody {
 
     get angularVelocity() {
         return this.angularMomentum / this.inertia;
+    }
+
+    get acceleration() {
+        return {
+            x: this.force.x / this.mass,
+            y: this.force.y / this.mass
+        };
+    }
+
+    get angularAcceleration() {
+        return this.torque / this.inertia;
+    }
+
+    addForce(force) {
+        this.force.x += force.x;
+        this.force.y += force.y;
+    }
+
+    addTorque(torque) {
+        this.torque += torque;
+    }
+
+    clearForces() {
+        this.force.x = 0;
+        this.force.y = 0;
+        this.torque = 0;
     }
 
     renderVisualization(ctx) {
@@ -157,7 +195,6 @@ class RectangleBody extends RigidBody {
         if (this.showVisualization) this.renderVisualization(ctx);
     }
 
-
     renderVisualization(ctx) {
         super.renderVisualization(ctx);
         ctx.save();
@@ -243,7 +280,7 @@ class KinematicRectangleBody extends RectangleBody {
         this.inertia = 100; 
     }
 
-    update(dt) {}
+    update(dt) {} // dont update 
 }
 
 class KinematicCircleBody extends CircleBody {
@@ -257,213 +294,167 @@ class KinematicCircleBody extends CircleBody {
     update(dt) {}
 }
 
-function handleRectangleRectangleCollision(r1, r2) {
+function handleRectangleRectangleCollision(r1, r2) { 
+    // collision detection using SAT 
     const corners1 = r1.corners;
     const corners2 = r2.corners;
 
-    const edges1 = getEdges(corners1);
-    const edges2 = getEdges(corners2);
-
-    const axes = [];
-
-    edges1.forEach(edge => axes.push(norm({ x: -edge.y, y: edge.x })));
-    edges2.forEach(edge => axes.push(norm({ x: -edge.y, y: edge.x })));
+    const edges = getEdges(corners1).concat(getEdges(corners2));
+    const axes = edges.map(edge => norm({ x: -edge.y, y: edge.x })); 
 
     let minOverlap = Infinity;
     let mtvAxis = null;
 
     for (const axis of axes) {
-        const proj1 = projectPoints(corners1, axis);
-        const proj2 = projectPoints(corners2, axis);
+        proj1 = projectPoints(corners1, axis);
+        proj2 = projectPoints(corners2, axis);
+        if (!(proj1.max >= proj2.min && proj2.max >= proj1.min)) return;
 
-        if (!overlap(proj1, proj2)) return; // No collision
-
-        const overlapAmount = Math.min(proj1.max, proj2.max) - Math.max(proj1.min, proj2.min);
-        if (overlapAmount < minOverlap) {
-            minOverlap = overlapAmount;
+        const overlap = Math.min(proj1.max, proj2.max) - Math.max(proj1.min, proj2.min);
+        if (overlap < minOverlap) {
+            minOverlap = overlap;
             mtvAxis = axis;
         }
     }
 
-    const d = sub(r2.position, r1.position);
-    if (dot(d, mtvAxis) < 0) mtvAxis = { x: -mtvAxis.x, y: -mtvAxis.y };
+    // Ensure MTV axis points from r1 to r2
+    const centerDelta = sub(r2.position, r1.position);
+    if (dot(centerDelta, mtvAxis) < 0) mtvAxis = scale(mtvAxis, -1);
 
-    const mtv = { x: mtvAxis.x * minOverlap, y: mtvAxis.y * minOverlap };
+    const mtv = scale(mtvAxis, minOverlap);
 
-    // Positional correction (split between the two bodies)
-    if (!r1.kinematic) {
-        r1.position.x -= mtv.x / 2;
-        r1.position.y -= mtv.y / 2;
+    const contactPoint = computeContactPoint(r1, r2, mtvAxis);
+    const radius1 = sub(contactPoint, r1.position);
+    const radius2 = sub(contactPoint, r2.position);
+
+    const vp1 = add(r1.velocity, scale(radius1, r1.angularVelocity));
+    const vp2 = add(r2.velocity, scale(radius2, r2.angularVelocity));
+    const rv = sub(vp2, vp1);
+
+    const rvalongNormal = dot(rv, mtvAxis);
+    if (rvalongNormal > 0) return;
+
+    const impulse = -(2) * rvalongNormal / (1 / r1.mass + 1 / r2.mass); // from lecture slides, completely elastic
+    const impulseVec = scale(mtvAxis, impulse);
+
+    const r1AngularImpulse = cross(radius1, impulseVec);
+    const r2AngularImpulse = cross(radius2, impulseVec);
+
+    if (r1.kinematic && !r2.kinematic) {
+        r2.position = add(r2.position, mtv); // positional correction 
+        r2.linearMomentum = add(r2.linearMomentum, impulseVec); // linear impulse
+        r2.angularMomentum += r2AngularImpulse; // angular impulse
+    } 
+    else if (!r1.kinematic && r2.kinematic) {
+        r1.position = sub(r1.position, mtv);
+        r1.linearMomentum = sub(r1.linearMomentum, impulseVec);
+        r1.angularMomentum -= r1AngularImpulse;
+    } 
+    else {
+        r1.position = sub(r1.position, scale(mtv, 0.5));
+        r2.position = add(r2.position, scale(mtv, 0.5));
+        r1.linearMomentum = sub(r1.linearMomentum, impulseVec);
+        r2.linearMomentum = add(r2.linearMomentum, impulseVec);
+        r1.angularMomentum -= r1AngularImpulse;
+        r2.angularMomentum += r2AngularImpulse;
     }
-    if (!r2.kinematic) {
-        r2.position.x += mtv.x / 2;
-        r2.position.y += mtv.y / 2;
-    }
-
-    // Relative velocity
-    const rvx = r2.velocity.x - r1.velocity.x;
-    const rvy = r2.velocity.y - r1.velocity.y;
-    const relVelAlongNormal = rvx * mtvAxis.x + rvy * mtvAxis.y;
-
-    if (relVelAlongNormal > 0) return; // Moving apart, no impulse
-
-    const restitution = 1; // perfectly elastic
-    const impulseScalar = -(1 + restitution) * relVelAlongNormal / (1 / r1.mass + 1 / r2.mass);
-
-    const impulseVector = { x: impulseScalar * mtvAxis.x, y: impulseScalar * mtvAxis.y };
-
-    // Apply linear impulses
-    if (!r1.kinematic) {
-        r1.linearMomentum.x -= impulseVector.x;
-        r1.linearMomentum.y -= impulseVector.y;
-    }
-    if (!r2.kinematic) {
-        r2.linearMomentum.x += impulseVector.x;
-        r2.linearMomentum.y += impulseVector.y;
-    }
-
-    // --- ROTATIONAL IMPULSE START ---
-    // Approximate contact point as midpoint of centers projected along mtvAxis
-    const contactPoint = {
-        x: (r1.position.x + r2.position.x) / 2,
-        y: (r1.position.y + r2.position.y) / 2,
-    };
-
-    // Lever arms
-    const r1_contact = sub(contactPoint, r1.position);
-    const r2_contact = sub(contactPoint, r2.position);
-
-    // Torque impulse = r × impulse
-    const r1_torqueImpulse = cross(r1_contact, impulseVector);
-    const r2_torqueImpulse = cross(r2_contact, impulseVector);
-
-    // Apply angular momentum changes
-    if (!r1.kinematic) r1.angularMomentum -= r1_torqueImpulse;
-    if (!r2.kinematic) r2.angularMomentum += r2_torqueImpulse;
-    // --- ROTATIONAL IMPULSE END ---
 }
 
-function handleCircleCircleCollision(c1, c2) {
-    const dx = c2.position.x - c1.position.x;
-    const dy = c2.position.y - c1.position.y;
-    const dist = Math.hypot(dx, dy);
+function handleCircleCircleCollision(c1, c2) { // no rotation to make it simple (not needed for assignment)
+    const d = sub(c2.position, c1.position);
+    const dist = Math.hypot(d.x, d.y);
     const overlap = c1.radius + c2.radius - dist;
 
     if (overlap <= 0 || dist === 0) return;
 
-    const nx = dx / dist;
-    const ny = dy / dist;
+    const n = scale(d, 1 / dist);
+    const rv = sub(c2.velocity, c1.velocity);
 
-    const rvx = c2.velocity.x - c1.velocity.x;
-    const rvy = c2.velocity.y - c1.velocity.y;
+    const rvAlongNormal = dot(n, rv);
+    if (rvAlongNormal > 0) return;
 
-    const relVelAlongNormal = rvx * nx + rvy * ny;
-    if (relVelAlongNormal > 0) return;
+    const impulse = -(2) * rvAlongNormal / (1 / c1.mass + 1 / c2.mass);
+    const impulseVec = scale(n, impulse);
 
-    const impulse = -(2) * relVelAlongNormal / (1 / c1.mass + 1 / c2.mass);
+    const mtv = scale(n, overlap); 
 
-    // Positional correction (split between the two bodies)
-    if (!c1.kinematic) {
-        c1.position.x -= nx * overlap / 2;
-        c1.position.y -= ny * overlap / 2;
-    }
-    if (!c2.kinematic) {
-        c2.position.x += nx * overlap / 2;
-        c2.position.y += ny * overlap / 2;
-    }
-
-    // Apply linear impulses
-    if (!c1.kinematic) {
-        c1.linearMomentum.x -= impulse * nx;
-        c1.linearMomentum.y -= impulse * ny;
-    }
-    if (!c2.kinematic) {
-        c2.linearMomentum.x += impulse * nx;
-        c2.linearMomentum.y += impulse * ny;
+    if (c1.kinematic && !c2.kinematic) {
+        c2.position = add(c2.position, mtv); 
+        c2.linearMomentum = add(c2.linearMomentum, impulseVec); 
+    } 
+    else if (!c1.kinematic && c2.kinematic) {
+        c1.position = sub(c1.position, mtv);
+        c1.linearMomentum = sub(c1.linearMomentum, impulseVec);
+    } 
+    else {
+        c1.position = sub(c1.position, scale(mtv, 0.5));
+        c2.position = add(c2.position, scale(mtv, 0.5));
+        c1.linearMomentum = sub(c1.linearMomentum, impulseVec);
+        c2.linearMomentum = add(c2.linearMomentum, impulseVec);
     }
 }
 
 function handleRectanlgeCircleCollision(rect, circle) {
-    // Step 1: circle center in rectangle local space
-    const localCirclePos = rect.getLocalPoint(circle.position);
-
-    // Step 2: clamp to rectangle bounds
+    const localCircle = rect.getLocalPoint(circle.position);
     const hw = rect.width / 2;
     const hh = rect.height / 2;
-    const closestLocalPoint = {
-        x: Math.min(hw, Math.max(-hw, localCirclePos.x)),
-        y: Math.min(hh, Math.max(-hh, localCirclePos.y))
+
+    const clamped = {
+        x: Math.max(-hw, Math.min(hw, localCircle.x)),
+        y: Math.max(-hh, Math.min(hh, localCircle.y))
     };
 
-    // Step 3: closest point in world space
-    const closestWorldPoint = rect.getWorldPoint(closestLocalPoint);
-
-    // Step 4: vector from closest point to circle center
-    const diff = {
-        x: circle.position.x - closestWorldPoint.x,
-        y: circle.position.y - closestWorldPoint.y
-    };
-
-    const distSq = diff.x * diff.x + diff.y * diff.y;
+    const contactPoint = rect.getWorldPoint(clamped);
+    const diff = sub(circle.position, contactPoint);
+    const distSq = dot(diff, diff);
     const radius = circle.radius;
 
-    // If no collision
     if (distSq > radius * radius) return;
 
     const dist = Math.sqrt(distSq);
-
-    // Handle rare case: circle center inside rectangle (dist ~ 0)
-    const normal = dist === 0 ? { x: 1, y: 0 } : { x: diff.x / dist, y: diff.y / dist };
-
+    const normal = dist === 0 ? { x: 1, y: 0 } : scale(diff, 1 / dist);
     const penetration = radius - dist;
 
-    // Positional correction (push apart)
     const totalMass = rect.mass + circle.mass;
+    const rv = sub(circle.velocity, rect.velocity);
+    const rvAlongNormal = dot(rv, normal);
+    if (rvAlongNormal > 0) return;
+
+    const impulseMag = -(2 * rvAlongNormal) / (1 / rect.mass + 1 / circle.mass);
+    const impulse = scale(normal, impulseMag);
+
+    const rRect = sub(contactPoint, rect.position);
+    const rCircle = sub(contactPoint, circle.position);
+
+    const torqueRect = cross(rRect, impulse);
+    const torqueCircle = cross(rCircle, impulse);
+
     if (!rect.kinematic) {
-        rect.position.x -= normal.x * penetration * (circle.mass / totalMass);
-        rect.position.y -= normal.y * penetration * (circle.mass / totalMass);
+        rect.linearMomentum = sub(rect.linearMomentum, impulse);
+        rect.angularMomentum -= torqueRect;
+        rect.position = sub(rect.position, scale(normal, penetration * (circle.mass / totalMass)));
     }
     if (!circle.kinematic) {
-        circle.position.x += normal.x * penetration * (rect.mass / totalMass);
-        circle.position.y += normal.y * penetration * (rect.mass / totalMass);
+        circle.linearMomentum = add(circle.linearMomentum, impulse);
+        circle.angularMomentum += torqueCircle;
+        circle.position = add(circle.position, scale(normal, penetration * (rect.mass / totalMass)));
     }
+}
 
-    // Relative velocity along normal
-    const rvx = circle.velocity.x - rect.velocity.x;
-    const rvy = circle.velocity.y - rect.velocity.y;
-    const relVelAlongNormal = rvx * normal.x + rvy * normal.y;
-
-    if (relVelAlongNormal > 0) return; // moving apart
-
-    // Calculate impulse scalar
-    const restitution = 1; // elastic collision
-    const impulseScalar = -(1 + restitution) * relVelAlongNormal / (1 / rect.mass + 1 / circle.mass);
-
-    const impulse = { x: impulseScalar * normal.x, y: impulseScalar * normal.y };
-
-    // Apply linear impulses
-    if (!rect.kinematic) {
-        rect.linearMomentum.x -= impulse.x;
-        rect.linearMomentum.y -= impulse.y;
+function projectPoints(points, axis) {
+    let min = dot(points[0], axis);
+    let max = min;
+    for (let i = 1; i < points.length; i++) {
+        const p = dot(points[i], axis);
+        if (p < min) min = p;
+        if (p > max) max = p;
     }
-    if (!circle.kinematic) {
-        circle.linearMomentum.x += impulse.x;
-        circle.linearMomentum.y += impulse.y;
+    return { min, max };
+}
+
+function computeContactPoint(r1, r2, mtvAxis) {
+    return {
+        x: (r1.position.x + r2.position.x) / 2,
+        y: (r1.position.y + r2.position.y) / 2
     }
-
-    // --- ROTATIONAL IMPULSE ---
-    // Contact point is closestWorldPoint
-    // Lever arms from centers of mass
-    const r_rect = sub(closestWorldPoint, rect.position);
-    const r_circle = sub(closestWorldPoint, circle.position);
-
-    function cross(a, b) {
-        return a.x * b.y - a.y * b.x;
-    }
-
-    const torqueRect = cross(r_rect, impulse);
-    const torqueCircle = cross(r_circle, impulse);
-
-    if (!rect.kinematic) rect.angularMomentum -= torqueRect / rect.inertia;
-    if (!circle.kinematic) circle.angularMomentum += torqueCircle / circle.inertia;
 }

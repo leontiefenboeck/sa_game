@@ -1,6 +1,18 @@
 // Vector functions
+function add(a, b) {
+    return { x: a.x + b.x, y: a.y + b.y };
+}
+
 function sub(a, b) {
     return { x: a.x - b.x, y: a.y - b.y };
+}
+
+function mul(a, b) {
+    return { x: a.x * b, y: a.y * b };
+}
+
+function scale(v, s) {
+    return { x: v.x * s, y: v.y * s };
 }
 
 function dot(a, b) {
@@ -24,21 +36,6 @@ function getEdges(corners) {
         edges.push(sub(corners[next], corners[i]));
     }
     return edges;
-}
-
-function projectPoints(points, axis) {
-    let min = dot(points[0], axis);
-    let max = min;
-    for (let i = 1; i < points.length; i++) {
-        const p = dot(points[i], axis);
-        if (p < min) min = p;
-        if (p > max) max = p;
-    }
-    return { min, max };
-}
-
-function overlap(proj1, proj2) {
-    return proj1.max >= proj2.min && proj2.max >= proj1.min;
 }
 
 function toCanvasCoords(point, canvas) {
