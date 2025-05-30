@@ -61,6 +61,10 @@ class Game2 {
     }
 
     update() {
+        if (this.fracture != null) {
+
+            this.fracture.update();
+        }
         this.updateBall();
         this.splines.forEach(spline => spline.update());
     }
@@ -119,8 +123,8 @@ class Game2 {
                     y: e.clientY - rect.top
                 };
     
-                this.ball.vx = (this.dragStart.x - dragEnd.x) * 0.1;
-                this.ball.vy = (this.dragStart.y - dragEnd.y) * 0.1;
+                this.ball.vx = (this.dragStart.x - dragEnd.x) * 10;
+                this.ball.vy = (this.dragStart.y - dragEnd.y) * 10;
     
                 this.isDragging = false;
                 this.ball.isActive = true;
@@ -146,14 +150,17 @@ class Game2 {
     updateBall() {
         const { ball, canvas } = this;
 
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-    
-        const friction = 0.99;
-        ball.vx *= friction;
-        ball.vy *= friction;
+
 
         if (ball.particle == null) {
+
+            const friction = 0.99;
+            ball.vx *= friction;
+            ball.vy *= friction;
+
+            ball.x += ball.vx / this.animationRate;
+            ball.y += ball.vy / this.animationRate;
+
             if (ball.x - ball.radius < 0) {
                 ball.x = ball.radius;
                 ball.vx *= -1;
@@ -191,7 +198,7 @@ class Game2 {
                 ball.particle.location.y = canvas.height - ball.particle.radius;
                 ball.particle.speed.y *= -1;
             }
-            ball.particle.update(this.particles, this.animationRate);
+            ball.particle.update(this.particles, 1/this.animationRate);
         }
 
         if (this.splines) { 

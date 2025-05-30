@@ -59,10 +59,10 @@ class Particle {
 
     update(particles, delta) {
         if (particles[0].integration) {
-            this.RK4(particles, delta / 1000);
+            this.RK4(particles, delta);
         }
         else {
-            this.euler(particles, delta / 1000);
+            this.euler(particles, delta);
         }
     }
 

@@ -458,16 +458,23 @@ class Voronoi {
 
     drawFragments(ctx) {
         for (let frag of this.fragmentObjects) {
-            frag.x += frag.vx * this.animationRate/5;
-            frag.y += frag.vy* this.animationRate/5;
-            frag.angle += frag.va* this.animationRate/5;
-
             ctx.save();
             ctx.translate(frag.x + this.width / 2, frag.y + this.height / 2);
             ctx.rotate(frag.angle);
             ctx.translate(-this.width / 2, -this.height / 2);
             ctx.drawImage(frag.canvas, 0, 0);
             ctx.restore();
+        }
+    }
+
+    updateFragments() {
+        if (this.fractured) {
+
+            for (let frag of this.fragmentObjects) {
+                frag.x += 100 * frag.vx/this.animationRate;
+                frag.y += 100 * frag.vy / this.animationRate;
+                frag.angle += 100 * frag.va / this.animationRate;
+            }
         }
     }
 
@@ -489,12 +496,9 @@ class Voronoi {
             this.drawPoints(ctx);
         }
 
-
-
-        
-
-        
-
+    }
+    update() {
+        this.updateFragments();
     }
     
 }
