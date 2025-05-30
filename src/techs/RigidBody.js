@@ -323,7 +323,7 @@ function handleRectangleRectangleCollision(r1, r2) {
 
     const mtv = scale(mtvAxis, minOverlap);
 
-    const contactPoint = computeContactPoint(r1, r2, mtvAxis);
+    const contactPoint = scale(add(r1.position, r2.position), 0.5);
     const radius1 = sub(contactPoint, r1.position);
     const radius2 = sub(contactPoint, r2.position);
 
@@ -450,11 +450,4 @@ function projectPoints(points, axis) {
         if (p > max) max = p;
     }
     return { min, max };
-}
-
-function computeContactPoint(r1, r2, mtvAxis) {
-    return {
-        x: (r1.position.x + r2.position.x) / 2,
-        y: (r1.position.y + r2.position.y) / 2
-    }
 }
