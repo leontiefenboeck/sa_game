@@ -24,6 +24,29 @@ fractureObject.getImage();
 game.fracture = fractureObject;
 
 
+const fpsControl = document.getElementById('fpsControl');
+const fpsDisplay = document.getElementById('fpsDisplay');
+fpsDisplay.textContent = game.fps;
+fpsControl.value = game.fps;
+
+fpsControl.addEventListener('input', () => {
+    const newRate = parseInt(fpsControl.value);
+    game.setFps(newRate); 
+    fpsDisplay.textContent = newRate;
+});
+
+const animationRateControl = document.getElementById('animationRateControl');
+const animationRateDisplay = document.getElementById('animationRateDisplay');
+animationRateDisplay.textContent = game.animationRate;
+animationRateControl.value = game.animationRate;
+
+animationRateControl.addEventListener('input', () => {
+    const newRate = parseInt(animationRateControl.value);
+    game.setAnimationRate(newRate);
+    animationRateDisplay.textContent = newRate;
+    fractureObject.animationRate = newRate;
+});
+
 const toggleVisualizationButton = document.getElementById('toggleVisualizationButton');
 toggleVisualizationButton.addEventListener('click', () => {
     if (!fractureObject.displayPoints && !fractureObject.displayDistanceField) {
