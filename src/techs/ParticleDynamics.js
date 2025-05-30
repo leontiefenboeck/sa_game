@@ -203,7 +203,7 @@ class Particle {
             ctx.fillStyle = "purple";
         }
         else{
-            ctx.fillStyle = "red";
+            ctx.fillStyle = "blue";
         }
 
 

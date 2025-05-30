@@ -24,6 +24,7 @@ class Game {
 
         this.particles = [];
         this.splines = [];
+        this.fracture = null;
 
         this.updateInterval = null;
         this.renderInterval = null;
@@ -60,11 +61,15 @@ class Game {
         const { ctx, canvas } = this;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (this.fracture != null) {
 
+            this.fracture.visualize(this.ctx);
+        }
         this.drawGoalCircles();
         this.drawBall();
         this.splines.forEach(spline => spline.render(ctx));
-        this.particles.forEach(particle => particle.render(ctx));
+        this.particles.forEach(particle => particle.render(this.particles, ctx));
+
     }
 
     setAnimationRate(newRate) {
@@ -115,6 +120,9 @@ class Game {
                     this.ball.particle.speed = new Vector2(this.ball.vx, this.ball.vy);
                 }
             }
+            if (this.fracture) {
+                this.fracture.hit();
+            }
         });
     }
 
@@ -163,11 +171,11 @@ class Game {
                 ball.particle.location.y = canvas.height - ball.particle.radius;
                 ball.particle.speed.y *= -1;
             }
-            ball.particle.update(this.particles, delta);
+            ball.particle.update(this.particles, this.animationRate);
         }
 
         if (this.splines) { 
-            for (const spline of splines) {
+            for (const spline of this.splines) {
                 const obj = spline.object;
                 const pos = spline.position;
                 const obstacle = {

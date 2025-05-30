@@ -6,19 +6,23 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-const ctx = canvas.getContext("2d");
-const game = new Game(10, canvas);
+const ctx = canvas.getContext('2d');
+const game = new Game(canvas);
 
-const holes = [
-    { x: 400, y: 100, radius: 20 }
+let holes = [
+    { x: 0.4, y: 0.1, radius: 0.02 }
 ];
+holes = holes.map(hole => toCanvasCircle(hole, canvas));
 game.setHoles(holes);
+
+
 
 let player = new Particle(new Vector2(game.ball.x, game.ball.y), 1);
 player.isPlayer = true
 player.radius = game.ball.radius;
 player.ball = game.ball;
 player.ball.particle = player;
+
 let obstacle1 = new Particle(new Vector2(canvas.width * 2 / 3 + 35, canvas.height - 135), 1000);
 let obstacle2 = new Particle(new Vector2(canvas.width *6/ 7 + 43, canvas.height - 289), 1000);
 let obstacle3 = new Particle(new Vector2(canvas.width * 1 / 4 + 12, canvas.height - 380), 1000);
@@ -70,4 +74,4 @@ toggleIntegrationButton.addEventListener('click', () => {
     
 });
 
-game.loop();
+game.start();
