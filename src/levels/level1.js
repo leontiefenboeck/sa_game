@@ -27,7 +27,6 @@ playableArea = playableArea.map(p => toCanvasCoords(p, canvas));
 game.playableArea = createRoundedPolygonPath(playableArea, 0.015 * canvas.width);
 
 // splines 
-
 let points1 = [
     { x: 0.25, y: 0.13 },
     { x: 0.25, y: 0.13 },
